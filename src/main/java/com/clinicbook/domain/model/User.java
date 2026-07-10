@@ -1,7 +1,6 @@
 package com.clinicbook.domain.model;
 
 import com.clinicbook.domain.enums.UserRole;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,7 +10,7 @@ public class User {
     private String fullName;
     private String nationalId;
     private String email;
-    private String password_hash;
+    private String passwordHash;
     private UserRole role;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -21,7 +20,7 @@ public class User {
                 String fullName,
                 String nationalId,
                 String email,
-                String password_hash,
+                String passwordHash,
                 UserRole role)
     {
         if (id == null){
@@ -33,7 +32,7 @@ public class User {
         if (email == null || email.isBlank()){
             throw new IllegalArgumentException("Email is required");
         }
-        if(password_hash == null || password_hash.isBlank()){
+        if(passwordHash == null || passwordHash.isBlank()){
             throw new IllegalArgumentException("Password is required");
         }
         if(role == null){
@@ -43,7 +42,7 @@ public class User {
         this.fullName = fullName;
         this.nationalId = nationalId;
         this.email = email;
-        this.password_hash = password_hash;
+        this.passwordHash = passwordHash;
         this.role = role;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = createdAt;
@@ -54,7 +53,7 @@ public class User {
                  String fullName,
                  String nationalId,
                  String email,
-                 String password_hash,
+                 String passwordHash,
                  UserRole role,
                  LocalDateTime createdAt,
                  LocalDateTime updatedAt,
@@ -63,7 +62,7 @@ public class User {
         this.fullName = fullName;
         this.nationalId = nationalId;
         this.email = email;
-        this.password_hash = password_hash;
+        this.passwordHash = passwordHash;
         this.role = role;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -74,13 +73,13 @@ public class User {
                        String fullName,
                        String nationalId,
                        String email,
-                       String password_hash,
+                       String passwordHash,
                        UserRole role,
                        LocalDateTime createdAt,
                        LocalDateTime updatedAt,
                        LocalDateTime disabledAt){
 
-        return new User(id, fullName, nationalId, email, password_hash, role, createdAt, updatedAt, disabledAt);
+        return new User(id, fullName, nationalId, email, passwordHash, role, createdAt, updatedAt, disabledAt);
     }
 
     // Behavior
@@ -123,7 +122,7 @@ public class User {
 
     public String getEmail() { return email; }
 
-    public String getPassword_hash() { return password_hash; }
+    public String getPasswordHash() { return passwordHash; }
 
     public UserRole getRole() { return role; }
 
@@ -132,4 +131,5 @@ public class User {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     public LocalDateTime getDisabledAt() { return disabledAt; }
+
 }
