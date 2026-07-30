@@ -11,15 +11,15 @@ import java.util.UUID;
 public class Doctor {
 
     private final UUID id;
-    private final UUID userId;
+    private final User user;
     private final Specialty specialty;
     private final int consultationDurationMinutes;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
     // Constructor: usado para CREAR un doctor nuevo.
-    public Doctor(UUID id, UUID userId, Specialty specialty, int consultationDurationMinutes) {
-        if (userId == null) {
+    public Doctor(UUID id, User user, Specialty specialty, int consultationDurationMinutes) {
+        if (user == null) {
             throw new IllegalArgumentException("Doctor must be associated with a user");
         }
         if (specialty == null) {
@@ -29,7 +29,7 @@ public class Doctor {
             throw new IllegalArgumentException("Consultation duration must be positive");
         }
         this.id = id;
-        this.userId = userId;
+        this.user = user;
         this.specialty = specialty;
         this.consultationDurationMinutes = consultationDurationMinutes;
         this.createdAt = LocalDateTime.now();
@@ -37,10 +37,10 @@ public class Doctor {
     }
 
     // Constructor privado: usado solo por reconstruct().
-    private Doctor(UUID id, UUID userId, Specialty specialty, int consultationDurationMinutes,
+    private Doctor(UUID id, User user, Specialty specialty, int consultationDurationMinutes,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
-        this.userId = userId;
+        this.user = user;
         this.specialty = specialty;
         this.consultationDurationMinutes = consultationDurationMinutes;
         this.createdAt = createdAt;
@@ -48,9 +48,9 @@ public class Doctor {
     }
 
     // Factory para RECONSTRUIR un Doctor existente desde la BD (usado por el mapper).
-    public static Doctor reconstruct(UUID id, UUID userId, Specialty specialty, int consultationDurationMinutes,
+    public static Doctor reconstruct(UUID id, User user, Specialty specialty, int consultationDurationMinutes,
                                      LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new Doctor(id, userId, specialty, consultationDurationMinutes, createdAt, updatedAt);
+        return new Doctor(id, user, specialty, consultationDurationMinutes, createdAt, updatedAt);
     }
 
 }
