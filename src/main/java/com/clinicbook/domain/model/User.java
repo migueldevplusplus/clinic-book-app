@@ -49,15 +49,8 @@ public class User {
         this.disabledAt = null;
     }
 
-    private User(UUID id,
-                 String fullName,
-                 String nationalId,
-                 String email,
-                 String passwordHash,
-                 UserRole role,
-                 LocalDateTime createdAt,
-                 LocalDateTime updatedAt,
-                 LocalDateTime disabledAt){
+    private User(UUID id, String fullName, String nationalId, String email, String passwordHash, UserRole role,
+                 LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime disabledAt) {
         this.id = id;
         this.fullName = fullName;
         this.nationalId = nationalId;
@@ -69,16 +62,10 @@ public class User {
         this.disabledAt = disabledAt;
     }
 
-    public static User reconstruct(UUID id,
-                       String fullName,
-                       String nationalId,
-                       String email,
-                       String passwordHash,
-                       UserRole role,
-                       LocalDateTime createdAt,
-                       LocalDateTime updatedAt,
-                       LocalDateTime disabledAt){
-
+    // Factory para RECONSTRUIR un User existente desde la BD (usado por el mapper).
+    // No revalida reglas de creación: confía en que el dato persistido ya era válido.
+    public static User reconstruct(UUID id, String fullName, String nationalId, String email, String passwordHash, UserRole role,
+                                   LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime disabledAt) {
         return new User(id, fullName, nationalId, email, passwordHash, role, createdAt, updatedAt, disabledAt);
     }
 

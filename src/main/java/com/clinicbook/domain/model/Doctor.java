@@ -1,60 +1,56 @@
 package com.clinicbook.domain.model;
 
+import com.clinicbook.domain.enums.Specialty;
 import com.clinicbook.domain.enums.UserRole;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Getter
 public class Doctor {
 
     private final UUID id;
-    private final User user;
-    private String specialty;
-    private int consultationDurationMinutes;
+    private final UUID userId;
+    private final Specialty specialty;
+    private final int consultationDurationMinutes;
     private final LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private final LocalDateTime updatedAt;
 
     // Constructor: usado para CREAR un doctor nuevo.
-    public Doctor(UUID id, User user, String specialty, int consultationDurationMinutes) {
-        if (user == null) {
+    public Doctor(UUID id, UUID userId, Specialty specialty, int consultationDurationMinutes) {
+        if (userId == null) {
             throw new IllegalArgumentException("Doctor must be associated with a user");
         }
-        if (user.getRole() != UserRole.DOCTOR) {
-            throw new IllegalArgumentException("Associated user must have DOCTOR role");
-        }
-        if (specialty == null || specialty.isBlank()) {
+        if (specialty == null) {
             throw new IllegalArgumentException("Specialty is required");
         }
         if (consultationDurationMinutes <= 0) {
             throw new IllegalArgumentException("Consultation duration must be positive");
         }
         this.id = id;
-        this.user = user;
+        this.userId = userId;
         this.specialty = specialty;
         this.consultationDurationMinutes = consultationDurationMinutes;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }
 
-    private Doctor(UUID id, User user, String specialty, int consultationDurationMinutes,
+    // Constructor privado: usado solo por reconstruct().
+    private Doctor(UUID id, UUID userId, Specialty specialty, int consultationDurationMinutes,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
-        this.user = user;
+        this.userId = userId;
         this.specialty = specialty;
         this.consultationDurationMinutes = consultationDurationMinutes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public static Doctor reconstruct(UUID id, User user, String specialty, int consultationDurationMinutes,
+    // Factory para RECONSTRUIR un Doctor existente desde la BD (usado por el mapper).
+    public static Doctor reconstruct(UUID id, UUID userId, Specialty specialty, int consultationDurationMinutes,
                                      LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new Doctor(id, user, specialty, consultationDurationMinutes, createdAt, updatedAt);
+        return new Doctor(id, userId, specialty, consultationDurationMinutes, createdAt, updatedAt);
     }
 
-    public UUID getId() { return id; }
-    public User getUser() { return user; }
-    public String getSpecialty() { return specialty; }
-    public int getConsultationDurationMinutes() { return consultationDurationMinutes; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

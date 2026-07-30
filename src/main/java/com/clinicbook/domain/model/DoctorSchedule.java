@@ -1,10 +1,13 @@
 package com.clinicbook.domain.model;
 
+import lombok.Getter;
+
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
 
+@Getter
 public class DoctorSchedule {
 
     private final UUID id;
@@ -13,7 +16,6 @@ public class DoctorSchedule {
     private final LocalTime startTime;
     private final LocalTime endTime;
     private final LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     // Constructor: usado para CREAR un bloque de horario nuevo.
     public DoctorSchedule(UUID id, UUID doctorId, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
@@ -35,7 +37,6 @@ public class DoctorSchedule {
         this.startTime = startTime;
         this.endTime = endTime;
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
     }
 
     private DoctorSchedule(UUID id, UUID doctorId, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime,
@@ -46,7 +47,6 @@ public class DoctorSchedule {
         this.startTime = startTime;
         this.endTime = endTime;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public static DoctorSchedule reconstruct(UUID id, UUID doctorId, DayOfWeek dayOfWeek,
@@ -68,11 +68,4 @@ public class DoctorSchedule {
         // Time doesn't occur before the schedule's start time, and it occurs before the schedule's end time
     }
 
-    public UUID getId() { return id; }
-    public UUID getDoctorId() { return doctorId; }
-    public DayOfWeek getDayOfWeek() { return dayOfWeek; }
-    public LocalTime getStartTime() { return startTime; }
-    public LocalTime getEndTime() { return endTime; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

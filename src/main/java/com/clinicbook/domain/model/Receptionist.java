@@ -26,16 +26,6 @@ public class Receptionist {
         this.updatedAt = this.createdAt;
     }
 
-    private Receptionist(UUID id, User user, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.user = user;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    public static Receptionist reconstruct(UUID id, User user, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new Receptionist(id, user, createdAt, updatedAt);
-    }
 
     public UUID getId() { return id; }
     public User getUser() { return user; }

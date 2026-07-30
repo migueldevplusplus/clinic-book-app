@@ -32,17 +32,21 @@ public class Patient {
         this.updatedAt = createdAt;
     }
 
-    private Patient(UUID id, LocalDate birthDate, String phoneNumber, UUID userId, LocalDateTime createdAt, LocalDateTime updatedAt){
+    // Constructor privado: usado solo por reconstruct().
+    private Patient(UUID id, UUID userId, LocalDate birthDate, String phoneNumber,
+                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.userId = userId;
         this.birthDate = birthDate;
         this.phoneNumber = phoneNumber;
-        this.userId = userId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    static public Patient reconstruct(UUID id, LocalDate birthDate, String phoneNumber, UUID userId, LocalDateTime createdAt, LocalDateTime updatedAt){
-        return new Patient(id, birthDate, phoneNumber, userId, createdAt, updatedAt);
+    // Factory para RECONSTRUIR un Patient existente desde la BD (usado por el mapper).
+    public static Patient reconstruct(UUID id, UUID userId, LocalDate birthDate, String phoneNumber,
+                                      LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return new Patient(id, userId, birthDate, phoneNumber, createdAt, updatedAt);
     }
 
     public UUID getId() {

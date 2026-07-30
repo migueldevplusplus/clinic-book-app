@@ -1,12 +1,14 @@
 package com.clinicbook.domain.model;
 
 import com.clinicbook.domain.enums.AppointmentStatus;
+import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
 
+@Getter
 public class Appointment {
     private final UUID id;
     private final UUID patientId;
@@ -57,32 +59,6 @@ public class Appointment {
         this.disabledAt = null;
     }
 
-
-    private Appointment(
-            UUID id, UUID patientId, UUID doctorId, LocalDate date,
-            LocalTime startTime, LocalTime endTime, AppointmentStatus status,
-            String cancellationReason, LocalDateTime createdAt, LocalDateTime updatedAt
-    ) {
-        this.id = id;
-        this.patientId = patientId;
-        this.doctorId = doctorId;
-        this.date = date;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    public static Appointment reconstruct(
-            UUID id, UUID patientId, UUID doctorId, LocalDate date,
-            LocalTime startTime, LocalTime endTime, AppointmentStatus status,
-            String cancellationReason, LocalDateTime createdAt, LocalDateTime updatedAt
-    ) {
-        return new Appointment(id, patientId, doctorId, date, startTime, endTime,
-                status, cancellationReason, createdAt, updatedAt);
-    }
-
     // Behavior
 
     public void confirm(){
@@ -120,28 +96,6 @@ public class Appointment {
         return this.startTime.isBefore(other.endTime)
                 && other.startTime.isBefore(this.endTime);
     }
-
-    // Getters
-
-    public UUID getId() { return id; }
-
-    public UUID getPatientId() { return patientId; }
-
-    public UUID getDoctorId() { return doctorId; }
-
-    public LocalDate getDate() { return date; }
-
-    public LocalTime getStartTime() { return startTime; }
-
-    public LocalTime getEndTime() { return endTime; }
-
-    public AppointmentStatus getStatus() { return status; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    public LocalDateTime getDisabledAt() { return disabledAt; }
 
 
 }
