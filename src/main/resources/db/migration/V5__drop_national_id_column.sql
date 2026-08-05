@@ -1,0 +1,1 @@
+ALTER TABLE clinic_user DROP COLUMN national_id;

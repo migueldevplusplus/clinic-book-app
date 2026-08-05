@@ -20,9 +20,6 @@ public class UserEntity{
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
-    @Column(name = "national_id", nullable = false, unique = true, length = 50)
-    private String nationalId;
-
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 

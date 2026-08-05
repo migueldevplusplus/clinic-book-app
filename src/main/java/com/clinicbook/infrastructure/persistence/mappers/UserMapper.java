@@ -15,7 +15,6 @@ public class UserMapper {
         UserEntity entity = new UserEntity();
         entity.setId(domainUser.getId());
         entity.setFullName(domainUser.getFullName());
-        entity.setNationalId(domainUser.getNationalId());
         entity.setEmail(domainUser.getEmail());
         entity.setPasswordHash(domainUser.getPasswordHash());
         entity.setRole(domainUser.getRole());
@@ -34,7 +33,6 @@ public class UserMapper {
         return User.reconstruct(
                 entity.getId(),
                 entity.getFullName(),
-                entity.getNationalId(),
                 entity.getEmail(),
                 entity.getPasswordHash(),
                 entity.getRole(),
