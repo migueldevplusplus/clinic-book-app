@@ -1,4 +1,12 @@
 package com.clinicbook.application.dtos;
 
-public record DoctorRegistrationResult() {
-}
+import com.clinicbook.domain.enums.Specialty;
+
+import java.util.UUID;
+
+public record DoctorRegistrationResult(
+        UUID doctorId,
+        String email,
+        String fullName,
+        Specialty specialty
+) {}

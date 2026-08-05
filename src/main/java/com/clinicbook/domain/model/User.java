@@ -1,14 +1,15 @@
 package com.clinicbook.domain.model;
 
 import com.clinicbook.domain.enums.UserRole;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Getter
 public class User {
     private final UUID id;
     private String fullName;
-    private String nationalId;
     private String email;
     private String passwordHash;
     private UserRole role;
@@ -18,7 +19,6 @@ public class User {
 
     public User(UUID id,
                 String fullName,
-                String nationalId,
                 String email,
                 String passwordHash,
                 UserRole role)
@@ -40,7 +40,6 @@ public class User {
         }
         this.id = id;
         this.fullName = fullName;
-        this.nationalId = nationalId;
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
@@ -49,11 +48,10 @@ public class User {
         this.disabledAt = null;
     }
 
-    private User(UUID id, String fullName, String nationalId, String email, String passwordHash, UserRole role,
+    private User(UUID id, String fullName, String email, String passwordHash, UserRole role,
                  LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime disabledAt) {
         this.id = id;
         this.fullName = fullName;
-        this.nationalId = nationalId;
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
@@ -64,9 +62,9 @@ public class User {
 
     // Factory para RECONSTRUIR un User existente desde la BD (usado por el mapper).
     // No revalida reglas de creación: confía en que el dato persistido ya era válido.
-    public static User reconstruct(UUID id, String fullName, String nationalId, String email, String passwordHash, UserRole role,
+    public static User reconstruct(UUID id, String fullName, String email, String passwordHash, UserRole role,
                                    LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime disabledAt) {
-        return new User(id, fullName, nationalId, email, passwordHash, role, createdAt, updatedAt, disabledAt);
+        return new User(id, fullName, email, passwordHash, role, createdAt, updatedAt, disabledAt);
     }
 
     // Behavior
@@ -99,24 +97,5 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Getters
-
-    public UUID getId() { return id; }
-
-    public String getFullName() { return fullName; }
-
-    public String getNationalId() { return nationalId; }
-
-    public String getEmail() { return email; }
-
-    public String getPasswordHash() { return passwordHash; }
-
-    public UserRole getRole() { return role; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    public LocalDateTime getDisabledAt() { return disabledAt; }
 
 }

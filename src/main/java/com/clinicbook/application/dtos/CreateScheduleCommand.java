@@ -1,4 +1,12 @@
 package com.clinicbook.application.dtos;
 
-public class CreateScheduleCommand {
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.UUID;
+
+public record CreateScheduleCommand(UUID doctorId,
+                                    DayOfWeek dayOfWeek,
+                                    LocalTime startTime,
+                                    LocalTime endTime
+                                    ) {
 }

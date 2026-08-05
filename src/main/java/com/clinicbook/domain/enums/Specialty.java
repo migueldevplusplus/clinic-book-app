@@ -1,4 +1,17 @@
 package com.clinicbook.domain.enums;
 
 public enum Specialty {
+    GENERAL_MEDICINE,
+    PEDIATRICS,
+    CARDIOLOGY,
+    DERMATOLOGY,
+    GYNECOLOGY,
+    OPHTHALMOLOGY,
+    ORTHOPEDICS,
+    PSYCHIATRY,
+    NEUROLOGY,
+    ENDOCRINOLOGY,
+    UROLOGY,
+    OTOLARYNGOLOGY,
+    ONCOLOGY
 }

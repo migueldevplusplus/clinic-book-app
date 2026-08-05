@@ -1,4 +1,10 @@
 package com.clinicbook.application.dtos;
 
-public record RegisterDoctorCommand() {
+import com.clinicbook.domain.enums.Specialty;
+
+public record RegisterDoctorCommand(String fullName,
+                                    String email,
+                                    String rawPassword,
+                                    Specialty specialty,
+                                    int consultationDurationMinutes) {
 }

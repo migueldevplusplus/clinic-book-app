@@ -19,7 +19,7 @@ public class Doctor {
 
     // Constructor: usado para CREAR un doctor nuevo.
     public Doctor(UUID id, User user, Specialty specialty, int consultationDurationMinutes) {
-        if (user == null) {
+        if (user == null || user.getRole() != UserRole.DOCTOR) {
             throw new IllegalArgumentException("Doctor must be associated with a user");
         }
         if (specialty == null) {
