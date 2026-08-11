@@ -27,10 +27,27 @@ public class AuthService {
             throw new EmailAlreadyInUseException(command.email());
         }
         String hashedPassword = passwordHasher.hash(command.rawPassword());
-        User newUser = new User(UUID.randomUUID(), command.fullName(), command.nationalId(), command.email(), hashedPassword, UserRole.PATIENT);
+        User newUser = new User(UUID.randomUUID(), command.fullName(), command.email(), hashedPassword, command.role());
         userRepository.save(newUser);
         String token = tokenProvider.generateToken(newUser);
         return new AuthResult(token, command.fullName(), newUser.getId(), newUser.getRole());
+    }
+
+    public User createUser(RegisterUserCommand command){
+        if(userRepository.existsByEmail(command.email())){
+            throw new EmailAlreadyInUseException(command.email());
+        }
+
+        String hashedPassword = passwordHasher.hash(command.rawPassword());
+
+        User user = new User(
+                UUID.randomUUID(),
+                command.fullName(),
+                command.email(),
+                hashedPassword,
+                command.role());
+
+        return userRepository.save(user);
     }
 
     public AuthResult login(LoginUserCommand command) {

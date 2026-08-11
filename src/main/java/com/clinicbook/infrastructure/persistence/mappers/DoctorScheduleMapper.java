@@ -16,6 +16,7 @@ public class DoctorScheduleMapper {
         entity.setDayOfWeek(domainDoctorSchedule.getDayOfWeek());
         entity.setStartTime(domainDoctorSchedule.getStartTime());
         entity.setEndTime(domainDoctorSchedule.getEndTime());
+        entity.setCreatedAt(domainDoctorSchedule.getCreatedAt());
 
         return entity;
     }

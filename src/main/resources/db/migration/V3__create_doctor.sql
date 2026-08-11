@@ -1,8 +1,7 @@
-CREATE TABLE patient (
-                          id           UUID PRIMARY KEY,
-                          birth_date   DATE      NOT NULL,
-                          phone_number VARCHAR(50),
-                          user_id UUID REFERENCES clinic_user(id) UNIQUE,
+CREATE TABLE doctor (
+                          id           UUID PRIMARY KEY REFERENCES clinic_user(id),
+                          specialty    VARCHAR(50) NOT NULL,
+                          consultation_duration_minutes INT NOT NULL,
                           created_at   TIMESTAMP NOT NULL,
                           updated_at   TIMESTAMP NOT NULL
 );

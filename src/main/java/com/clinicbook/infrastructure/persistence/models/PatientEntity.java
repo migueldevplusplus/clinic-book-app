@@ -23,8 +23,10 @@ public class PatientEntity {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Column(name = "user_id", unique = true, nullable = false)
-    private UUID userId;
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id")
+    private UserEntity user;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -32,5 +34,7 @@ public class PatientEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    public PatientEntity(){
 
+    }
 }

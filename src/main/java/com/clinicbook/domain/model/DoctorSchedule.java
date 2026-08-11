@@ -1,5 +1,6 @@
 package com.clinicbook.domain.model;
 
+import com.clinicbook.domain.exception.InvalidScheduleException;
 import lombok.Getter;
 
 import java.time.DayOfWeek;
@@ -29,7 +30,7 @@ public class DoctorSchedule {
             throw new IllegalArgumentException("Start time and end time are required");
         }
         if (!startTime.isBefore(endTime)) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new InvalidScheduleException("Start time must be before end time");
         }
         this.id = id;
         this.doctorId = doctorId;
@@ -66,6 +67,10 @@ public class DoctorSchedule {
     public boolean coversTime(LocalTime time) {
         return !time.isBefore(startTime) && time.isBefore(endTime);
         // Time doesn't occur before the schedule's start time, and it occurs before the schedule's end time
+    }
+
+    public boolean coversInterval(LocalTime start, LocalTime end){
+        return !start.isBefore(startTime) && !end.isAfter(endTime);
     }
 
 }
