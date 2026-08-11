@@ -59,6 +59,23 @@ public class Appointment {
         this.disabledAt = null;
     }
 
+    private Appointment(UUID id, UUID patientId, UUID doctorId, LocalDate date, LocalTime startTime, LocalTime endTime, AppointmentStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime disabledAt) {
+        this.id = id;
+        this.patientId = patientId;
+        this.doctorId = doctorId;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.disabledAt = disabledAt;
+    }
+
+    public static Appointment reconstruct(UUID id, UUID patientId, UUID doctorId, LocalDate date, LocalTime startTime, LocalTime endTime, AppointmentStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime disabledAt){
+        return new Appointment(id, patientId, doctorId, date, startTime, endTime, status, createdAt, updatedAt, disabledAt);
+    }
+
     // Behavior
 
     public void confirm(){
@@ -86,7 +103,7 @@ public class Appointment {
     }
 
     public boolean isActive() {
-        return status == AppointmentStatus.PENDING || status == AppointmentStatus.CONFIRMED;
+        return status == AppointmentStatus.PENDING || status == AppointmentStatus.CONFIRMED || disabledAt != null;
     }
 
     public boolean overlapsWith(Appointment other){
@@ -95,6 +112,10 @@ public class Appointment {
         if(!other.isActive()) return false;
         return this.startTime.isBefore(other.endTime)
                 && other.startTime.isBefore(this.endTime);
+    }
+
+    public boolean overlapsWith(LocalTime start, LocalTime end){
+        return !start.isBefore(startTime) && !end.isAfter(endTime);
     }
 
 

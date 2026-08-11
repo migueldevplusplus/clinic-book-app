@@ -4,25 +4,23 @@ import com.clinicbook.domain.model.User;
 import com.clinicbook.domain.port.UserRepositoryPort;
 import com.clinicbook.infrastructure.persistence.mappers.UserMapper;
 import com.clinicbook.infrastructure.persistence.models.UserEntity;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@AllArgsConstructor
 @Component
 public class UserRepositoryImpl implements UserRepositoryPort {
     private final UserJpaRepository userJpaRepo;
     private final UserMapper userMapper;
 
-    public UserRepositoryImpl(UserJpaRepository userJpaRepo, UserMapper userMapper){
-        this.userJpaRepo = userJpaRepo;
-        this.userMapper = userMapper;
-    }
 
     @Override
-    public void save(User user) {
+    public User save(User user) {
         UserEntity entity = userMapper.toEntity(user);
-        userJpaRepo.save(entity);
+        return userMapper.toDomain(userJpaRepo.save(entity));
     }
 
     @Override

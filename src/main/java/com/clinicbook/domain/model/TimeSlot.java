@@ -1,6 +1,16 @@
-package com.clinicbook.application.dtos;
+package com.clinicbook.domain.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalTime;
 
-public record TimeSlot(LocalTime time, boolean isAvailable) {
+@AllArgsConstructor
+@Getter
+@Setter
+public class TimeSlot {
+    private LocalTime time;
+    private boolean isAvailable;
+
 }

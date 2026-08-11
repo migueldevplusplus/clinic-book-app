@@ -5,6 +5,7 @@ import com.clinicbook.application.dtos.AuthResult;
 import com.clinicbook.application.dtos.LoginUserCommand;
 import com.clinicbook.application.dtos.RegisterUserCommand;
 import com.clinicbook.application.service.AuthService;
+import com.clinicbook.domain.enums.UserRole;
 import com.clinicbook.web.request.LoginRequest;
 import com.clinicbook.web.request.RegisterRequest;
 import com.clinicbook.web.response.AuthResponse;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -28,7 +28,12 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody RegisterRequest request){
         // Mapping the request to the application layer command
-        RegisterUserCommand command = new RegisterUserCommand(request.fullName(), request.email(), request.nationalId(), request.rawPassword());
+        RegisterUserCommand command = new
+                RegisterUserCommand
+                        (request.fullName(),
+                        request.email(),
+                        request.rawPassword(),
+                        UserRole.PATIENT);
 
         // Receiving the result from the service
         AuthResult result = authService.signup(command);

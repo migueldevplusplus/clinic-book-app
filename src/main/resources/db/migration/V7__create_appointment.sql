@@ -1,9 +1,7 @@
-INSERT INTO clinic_user VALUES (
-                                   gen_random_uuid(),
-                                   'Super Admin',
-                                   'miguelmora32466@gmail.com',
-                                   '$2a$10$hbBsTVJ1QrR9nGHHQgxxD.AvkVJBRMaxCblle76bAN5JI8tQjmBtO',
-                                   'SUPER_ADMIN',
-                                    NOW(),
-                                    NOW()
-                               );
+CREATE TABLE appointment (
+                             id           UUID PRIMARY KEY REFERENCES clinic_user(id),
+                             specialty    VARCHAR(50) NOT NULL,
+                             consultation_duration_minutes INT NOT NULL,
+                             created_at   TIMESTAMP NOT NULL,
+                             updated_at   TIMESTAMP NOT NULL
+)

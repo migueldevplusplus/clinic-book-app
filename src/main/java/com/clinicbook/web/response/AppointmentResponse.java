@@ -4,7 +4,7 @@ import com.clinicbook.domain.enums.AppointmentStatus;
 
 import java.util.UUID;
 
-public record AppointmentCreatedResponse(
+public record AppointmentResponse(
         UUID appointmentId,
         AppointmentStatus status
 ) {}

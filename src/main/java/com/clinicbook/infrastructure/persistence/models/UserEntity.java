@@ -4,10 +4,12 @@ import com.clinicbook.domain.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@SQLRestriction("disabled_at IS NULL")
 @Setter
 @Getter
 @Entity
