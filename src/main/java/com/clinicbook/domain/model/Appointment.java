@@ -87,23 +87,25 @@ public class Appointment {
     }
 
     public void complete(){
-        if(status != AppointmentStatus.COMPLETED){
+        if(status != AppointmentStatus.CONFIRMED){
             throw new IllegalStateException("Only confirmed appointments can be completed");
         }
-        status = AppointmentStatus.CONFIRMED;
+        status = AppointmentStatus.COMPLETED;
         updatedAt = LocalDateTime.now();
     }
 
     public void cancel(){
-        if(status != AppointmentStatus.CONFIRMED){
-            throw new IllegalStateException("Only confirmed appointments can be cancelled");
+        if(status != AppointmentStatus.CONFIRMED && status != AppointmentStatus.PENDING){
+            throw new IllegalStateException("Only confirmed and appointments can be cancelled");
         }
         status = AppointmentStatus.CANCELLED;
         updatedAt = LocalDateTime.now();
     }
 
+
+
     public boolean isActive() {
-        return status == AppointmentStatus.PENDING || status == AppointmentStatus.CONFIRMED || disabledAt != null;
+        return (status == AppointmentStatus.PENDING || status == AppointmentStatus.CONFIRMED) && disabledAt == null;
     }
 
     public boolean overlapsWith(Appointment other){
@@ -117,6 +119,7 @@ public class Appointment {
     public boolean overlapsWith(LocalTime start, LocalTime end){
         return !start.isBefore(startTime) && !end.isAfter(endTime);
     }
+
 
 
 }
