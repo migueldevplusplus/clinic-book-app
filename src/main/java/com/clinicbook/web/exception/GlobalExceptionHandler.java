@@ -16,6 +16,21 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(AppointmentOverlapException.class)
+    public ResponseEntity<ErrorResponse> handleAppointmentOverlap(AppointmentOverlapException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(AppointmentNotInScheduleException.class)
+    public ResponseEntity<ErrorResponse> handleAppointmentNotInSchedule(AppointmentNotInScheduleException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(AppointmentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAppointmentNotFound(AppointmentNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     @ExceptionHandler(EmailAlreadyInUseException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyInuse(EmailAlreadyInUseException ex) {
         return build(HttpStatus.CONFLICT, ex.getMessage());
