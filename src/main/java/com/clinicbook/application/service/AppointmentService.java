@@ -82,7 +82,7 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    public Appointment completeAsReceptionist(UUID appointmentId, UUID requestingUserId){
+    public Appointment completeAsReceptionist(UUID appointmentId){
         // FETCH + VALIDATE
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException("The appointment couldn't be found"));

@@ -7,6 +7,7 @@ import com.clinicbook.domain.model.Appointment;
 import com.clinicbook.domain.port.AppointmentRepositoryPort;
 import com.clinicbook.infrastructure.persistence.mappers.AppointmentMapper;
 import com.clinicbook.infrastructure.persistence.models.AppointmentEntity;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@AllArgsConstructor
 @Component
 public class AppointmentRepositoryImpl implements AppointmentRepositoryPort{
     AppointmentJpaRepository appointmentJpaRepo;

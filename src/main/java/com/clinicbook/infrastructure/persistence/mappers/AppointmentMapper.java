@@ -2,7 +2,9 @@ package com.clinicbook.infrastructure.persistence.mappers;
 
 import com.clinicbook.domain.model.Appointment;
 import com.clinicbook.infrastructure.persistence.models.AppointmentEntity;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AppointmentMapper {
 
     public AppointmentEntity toEntity(Appointment domainAppointment){

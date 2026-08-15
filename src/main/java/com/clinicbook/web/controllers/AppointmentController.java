@@ -32,20 +32,6 @@ public class AppointmentController {
     // COMMAND
 
 
-    @PreAuthorize("hasRole('RECEPTIONIST')")
-    @PostMapping
-    public ResponseEntity<AppointmentResponse> createByReceptionist(
-            @Valid @RequestBody CreateAppointmentReceptionistRequest request){
-
-        CreateAppointmentCommand command = new CreateAppointmentCommand(
-                request.patientId(), request.doctorId(), request.date(), request.startTime(), request.endTime());
-
-        Appointment appointment = appointmentService.createAppointment(command);
-
-        AppointmentResponse response = new AppointmentResponse(appointment.getId(), appointment.getStatus());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
 
     @PreAuthorize("hasRole('PATIENT')")
     @PostMapping
@@ -62,9 +48,23 @@ public class AppointmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PreAuthorize("hasRole('RECEPTIONIST')")
+    @PostMapping("/receptionist")
+    public ResponseEntity<AppointmentResponse> createByReceptionist(
+            @Valid @RequestBody CreateAppointmentReceptionistRequest request){
+
+        CreateAppointmentCommand command = new CreateAppointmentCommand(
+                request.patientId(), request.doctorId(), request.date(), request.startTime(), request.endTime());
+
+        Appointment appointment = appointmentService.createAppointment(command);
+
+        AppointmentResponse response = new AppointmentResponse(appointment.getId(), appointment.getStatus());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
     @PreAuthorize("hasRole('RECEPTIONIST')")
-    @PostMapping("/{appointmentId}")
+    @PostMapping("/{appointmentId}/confirm")
     public ResponseEntity<AppointmentResponse> confirm(
             @PathVariable UUID appointmentId
     ){
@@ -77,7 +77,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('DOCTOR')")
-    @PostMapping("/{appointmentId}")
+    @PostMapping("/{appointmentId}/complete")
     public ResponseEntity<AppointmentResponse> completeAsDoctor(
             @PathVariable UUID appointmentId,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -90,11 +90,11 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('RECEPTIONIST')")
-    @PostMapping("/{appointmentId}")
+    @PostMapping("/{appointmentId}/complete/receptionist")
     public ResponseEntity<AppointmentResponse> completeAsReceptionist(
             @PathVariable UUID appointmentId
     ){
-        Appointment appointment = appointmentService.confirmAppointment(appointmentId);
+        Appointment appointment = appointmentService.completeAsReceptionist(appointmentId);
 
         AppointmentResponse response = new AppointmentResponse(appointment.getId(), appointment.getStatus());
 
@@ -102,7 +102,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @DeleteMapping("/{appointmentId}")
+    @DeleteMapping("/{appointmentId}/cancel")
     public ResponseEntity<AppointmentResponse> cancelAsPatient(
             @PathVariable UUID appointmentId,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -114,8 +114,8 @@ public class AppointmentController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PreAuthorize("hasRole('PATIENT')")
-    @DeleteMapping("/{appointmentId}")
+    @PreAuthorize("hasRole('RECEPTIONIST')")
+    @PostMapping("/{appointmentId}/cancel/receptionist")
     public ResponseEntity<AppointmentResponse> cancelAsReceptionist(
             @PathVariable UUID appointmentId
     ){
@@ -152,7 +152,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('DOCTOR')")
-    @GetMapping("/agenda")
+    @GetMapping("/upcoming-agenda")
     public ResponseEntity<List<AppointmentsDoctorResult>> getUpcomingDoctorAgenda(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ){
@@ -163,7 +163,7 @@ public class AppointmentController {
 
 
     @PreAuthorize("hasRole('RECEPTIONIST')")
-    @GetMapping("/{doctorId}/agenda")
+    @GetMapping("/{doctorId}/receptionist")
     public ResponseEntity<List<AppointmentsDoctorResult>> getDoctorAgendaByReceptionist(
             @PathVariable UUID doctorId,
             @RequestParam LocalDate date
@@ -174,7 +174,7 @@ public class AppointmentController {
     }
 
 
-            @GetMapping("/{doctorId}")
+    @GetMapping("/{doctorId}")
     public ResponseEntity<List<TimeSlot>> getAvailability(@RequestParam LocalDate date, @PathVariable UUID doctorId){
         List<TimeSlot> timeSlots = appointmentService.getAvailability(date, doctorId);
 
