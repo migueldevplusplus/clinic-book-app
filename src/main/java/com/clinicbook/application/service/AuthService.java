@@ -2,16 +2,20 @@ package com.clinicbook.application.service;
 
 import com.clinicbook.application.dtos.AuthResult;
 import com.clinicbook.application.dtos.LoginUserCommand;
-import com.clinicbook.application.dtos.RegisterUserCommand;
+import com.clinicbook.application.dtos.RegisterDoctorCommand;
+import com.clinicbook.application.dtos.RegisterPatientCommand;
 import com.clinicbook.domain.enums.UserRole;
 import com.clinicbook.domain.exception.EmailAlreadyInUseException;
 import com.clinicbook.domain.exception.InvalidCredentialsException;
+import com.clinicbook.domain.model.Patient;
 import com.clinicbook.domain.model.User;
 import com.clinicbook.domain.port.JwtTokenProviderPort;
 import com.clinicbook.domain.port.PasswordHasherPort;
+import com.clinicbook.domain.port.PatientRepositoryPort;
 import com.clinicbook.domain.port.UserRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -19,21 +23,27 @@ import java.util.UUID;
 @Service
 public class AuthService {
     private final UserRepositoryPort userRepository;
+    private final PatientRepositoryPort patientRepository;
     private final PasswordHasherPort passwordHasher; // port, implemented in infrastructure
     private final JwtTokenProviderPort tokenProvider; // port, implemented in infrastructure
 
-    public AuthResult signup(RegisterUserCommand command) {
+    @Transactional
+    public AuthResult signup(RegisterPatientCommand command) {
         if (userRepository.existsByEmail(command.email())) {
             throw new EmailAlreadyInUseException(command.email());
         }
         String hashedPassword = passwordHasher.hash(command.rawPassword());
         User newUser = new User(UUID.randomUUID(), command.fullName(), command.email(), hashedPassword, command.role());
+        Patient patient = new Patient(newUser.getId(), command.birthDate(), command.phoneNumber(), newUser);
+
         userRepository.save(newUser);
+        patientRepository.save(patient);
+
         String token = tokenProvider.generateToken(newUser);
         return new AuthResult(token, command.fullName(), newUser.getId(), newUser.getRole());
     }
 
-    public User createUser(RegisterUserCommand command){
+    public User createDoctorUser(RegisterDoctorCommand command){
         if(userRepository.existsByEmail(command.email())){
             throw new EmailAlreadyInUseException(command.email());
         }
@@ -45,7 +55,7 @@ public class AuthService {
                 command.fullName(),
                 command.email(),
                 hashedPassword,
-                command.role());
+                UserRole.DOCTOR);
 
         return userRepository.save(user);
     }

@@ -3,7 +3,7 @@ package com.clinicbook.web.controllers;
 
 import com.clinicbook.application.dtos.AuthResult;
 import com.clinicbook.application.dtos.LoginUserCommand;
-import com.clinicbook.application.dtos.RegisterUserCommand;
+import com.clinicbook.application.dtos.RegisterPatientCommand;
 import com.clinicbook.application.service.AuthService;
 import com.clinicbook.domain.enums.UserRole;
 import com.clinicbook.web.request.LoginRequest;
@@ -28,12 +28,14 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody RegisterRequest request){
         // Mapping the request to the application layer command
-        RegisterUserCommand command = new
-                RegisterUserCommand
+        RegisterPatientCommand command = new
+                RegisterPatientCommand
                         (request.fullName(),
                         request.email(),
                         request.rawPassword(),
-                        UserRole.PATIENT);
+                        UserRole.PATIENT,
+                                request.birthDate(),
+                                request.phoneNumber());
 
         // Receiving the result from the service
         AuthResult result = authService.signup(command);
