@@ -4,6 +4,8 @@ import com.clinicbook.domain.model.Patient;
 import com.clinicbook.domain.port.PatientRepositoryPort;
 import com.clinicbook.infrastructure.persistence.mappers.PatientMapper;
 import com.clinicbook.infrastructure.persistence.models.PatientEntity;
+import com.clinicbook.infrastructure.persistence.models.UserEntity;
+import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,12 +17,19 @@ import java.util.UUID;
 public class PatientRepositoryImpl implements PatientRepositoryPort {
     private final PatientMapper patientMapper;
     private final PatientJpaRepository patientJpaRepo;
+    private final EntityManager entityManager;
 
 
     @Override
     public Patient save(Patient patient) {
         PatientEntity entity = patientMapper.toEntity(patient);
-        return patientMapper.toDomain(patientJpaRepo.save(entity));
+
+        UserEntity userRef = entityManager.getReference(UserEntity.class, patient.getUser().getId());
+        entity.setUser(userRef);
+
+        entityManager.persist(entity);
+
+        return patientMapper.toDomain(entity);
     }
 
     @Override

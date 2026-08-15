@@ -2,7 +2,6 @@ package com.clinicbook.application.service;
 
 import com.clinicbook.application.dtos.*;
 import com.clinicbook.domain.enums.Specialty;
-import com.clinicbook.domain.enums.UserRole;
 import com.clinicbook.domain.exception.DoctorNotFoundException;
 import com.clinicbook.domain.exception.InvalidOwnerException;
 import com.clinicbook.domain.exception.ScheduleNotFoundException;
@@ -35,17 +34,15 @@ public class DoctorService {
     public DoctorRegistrationResult registerDoctor(RegisterDoctorCommand command){
 
         // FETCH
-        RegisterUserCommand userCommand = new RegisterUserCommand
-        (command.fullName(), command.email(), command.rawPassword(), UserRole.DOCTOR);
 
-        User user = authService.createUser(userCommand);
+        User user = authService.createDoctorUser(command);
 
         Doctor doctor = new Doctor(user.getId(), user, command.specialty(), command.consultationDurationMinutes());
 
         doctorRepositoryPort.save(doctor);
 
         return new DoctorRegistrationResult(
-                doctor.getId(), userCommand.email(), userCommand.fullName(), doctor.getSpecialty()
+                doctor.getId(), command.email(), command.fullName(), doctor.getSpecialty()
         );
     }
 
