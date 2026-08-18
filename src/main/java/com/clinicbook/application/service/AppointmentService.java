@@ -1,6 +1,7 @@
 package com.clinicbook.application.service;
 
 
+import com.clinicbook.application.dtos.AllAppointmentsResult;
 import com.clinicbook.application.dtos.AppointmentsDoctorResult;
 import com.clinicbook.application.dtos.AppointmentsPatientResult;
 import com.clinicbook.application.dtos.CreateAppointmentCommand;
@@ -12,6 +13,7 @@ import com.clinicbook.domain.port.AppointmentRepositoryPort;
 import com.clinicbook.domain.port.DoctorRepositoryPort;
 import com.clinicbook.domain.port.DoctorScheduleRepositoryPort;
 import lombok.AllArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -137,6 +139,10 @@ public class AppointmentService {
 
     public List<AppointmentsDoctorResult> getDoctorUpcomingAppointments(UUID doctorId){
         return appointmentRepository.findUpcomingByDoctorId(doctorId);
+    }
+
+    public List<AllAppointmentsResult> getAllAppointmentsByDate(LocalDate date){
+        return appointmentRepository.findAllByDate(date);
     }
 
     public List<TimeSlot> getAvailability(LocalDate date, UUID doctorId){

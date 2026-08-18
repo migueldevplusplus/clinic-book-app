@@ -1,6 +1,7 @@
 package com.clinicbook.infrastructure.persistence.repositories;
 
 
+import com.clinicbook.application.dtos.AllAppointmentsResult;
 import com.clinicbook.application.dtos.AppointmentsDoctorResult;
 import com.clinicbook.application.dtos.AppointmentsPatientResult;
 import com.clinicbook.domain.model.Appointment;
@@ -56,11 +57,8 @@ public class AppointmentRepositoryImpl implements AppointmentRepositoryPort{
     }
 
     @Override
-    public List<Appointment> findAllByDate(LocalDate date) {
-        return appointmentJpaRepo.findAllByDate(date)
-                .stream()
-                .map(appointmentMapper::toDomain)
-                .toList();
+    public List<AllAppointmentsResult> findAllByDate(LocalDate date) {
+        return appointmentJpaRepo.findAllAppointmentsByDate(date);
     }
 
     @Override

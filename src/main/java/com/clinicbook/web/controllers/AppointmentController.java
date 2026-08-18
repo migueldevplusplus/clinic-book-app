@@ -1,5 +1,6 @@
 package com.clinicbook.web.controllers;
 
+import com.clinicbook.application.dtos.AllAppointmentsResult;
 import com.clinicbook.application.dtos.AppointmentsDoctorResult;
 import com.clinicbook.application.dtos.AppointmentsPatientResult;
 import com.clinicbook.application.dtos.CreateAppointmentCommand;
@@ -64,7 +65,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('RECEPTIONIST')")
-    @PostMapping("/{appointmentId}/confirm")
+    @PatchMapping("/{appointmentId}/confirm")
     public ResponseEntity<AppointmentResponse> confirm(
             @PathVariable UUID appointmentId
     ){
@@ -77,7 +78,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('DOCTOR')")
-    @PostMapping("/{appointmentId}/complete")
+    @PatchMapping("/{appointmentId}/complete")
     public ResponseEntity<AppointmentResponse> completeAsDoctor(
             @PathVariable UUID appointmentId,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -90,7 +91,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('RECEPTIONIST')")
-    @PostMapping("/{appointmentId}/complete/receptionist")
+    @PatchMapping("/{appointmentId}/complete/receptionist")
     public ResponseEntity<AppointmentResponse> completeAsReceptionist(
             @PathVariable UUID appointmentId
     ){
@@ -102,7 +103,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @DeleteMapping("/{appointmentId}/cancel")
+    @PatchMapping("/{appointmentId}/cancel")
     public ResponseEntity<AppointmentResponse> cancelAsPatient(
             @PathVariable UUID appointmentId,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -115,7 +116,7 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('RECEPTIONIST')")
-    @PostMapping("/{appointmentId}/cancel/receptionist")
+    @PatchMapping("/{appointmentId}/cancel/receptionist")
     public ResponseEntity<AppointmentResponse> cancelAsReceptionist(
             @PathVariable UUID appointmentId
     ){
@@ -137,7 +138,7 @@ public class AppointmentController {
         @AuthenticationPrincipal CustomUserDetails userDetails
     ){
         List<AppointmentsPatientResult> patientAppointments = appointmentService.getPatientAppointments(userDetails.getId());
-        return ResponseEntity.status(HttpStatus.OK).body(patientAppointments);
+        return ResponseEntity.ok(patientAppointments);
     }
 
     @PreAuthorize("hasRole('DOCTOR')")
@@ -148,7 +149,7 @@ public class AppointmentController {
     ){
         List<AppointmentsDoctorResult> doctorAppointments = appointmentService.getDoctorAgendaByDate(userDetails.getId(), date);
 
-        return ResponseEntity.status(HttpStatus.OK).body(doctorAppointments);
+        return ResponseEntity.ok(doctorAppointments);
     }
 
     @PreAuthorize("hasRole('DOCTOR')")
@@ -158,7 +159,7 @@ public class AppointmentController {
     ){
         List<AppointmentsDoctorResult> doctorAppointments = appointmentService.getDoctorUpcomingAppointments(userDetails.getId());
 
-        return ResponseEntity.status(HttpStatus.OK).body(doctorAppointments);
+        return ResponseEntity.ok(doctorAppointments);
     }
 
 
@@ -170,7 +171,7 @@ public class AppointmentController {
     ){
         List<AppointmentsDoctorResult> doctorAppointments = appointmentService.getDoctorAgendaByDate(doctorId, date);
 
-        return ResponseEntity.status(HttpStatus.OK).body(doctorAppointments);
+        return ResponseEntity.ok(doctorAppointments);
     }
 
 
@@ -178,11 +179,16 @@ public class AppointmentController {
     public ResponseEntity<List<TimeSlot>> getAvailability(@RequestParam LocalDate date, @PathVariable UUID doctorId){
         List<TimeSlot> timeSlots = appointmentService.getAvailability(date, doctorId);
 
-        return ResponseEntity.status(HttpStatus.OK).body(timeSlots);
+        return ResponseEntity.ok(timeSlots);
     }
 
 
-
+    @PreAuthorize("hasAnyRole('RECEPTIONIST')")
+    @GetMapping("/all")
+    public ResponseEntity<List<AllAppointmentsResult>> getAllAppointments(@RequestParam LocalDate date) {
+        List<AllAppointmentsResult> appointments = appointmentService.getAllAppointmentsByDate(date);
+        return ResponseEntity.ok(appointments);
+    }
 
 
 

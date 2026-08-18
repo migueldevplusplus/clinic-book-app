@@ -1,5 +1,6 @@
 package com.clinicbook.infrastructure.persistence.repositories;
 
+import com.clinicbook.application.dtos.AllAppointmentsResult;
 import com.clinicbook.application.dtos.AppointmentsDoctorResult;
 import com.clinicbook.application.dtos.AppointmentsPatientResult;
 import com.clinicbook.domain.model.Appointment;
@@ -18,7 +19,14 @@ import java.util.UUID;
 public interface AppointmentJpaRepository extends JpaRepository<AppointmentEntity, UUID> {
     List<AppointmentEntity> findByDoctorIdAndDate(UUID doctorId, LocalDate date);
 
-    List<AppointmentEntity> findAllByDate(LocalDate date);
+    @Query("SELECT new com.clinicbook.application.dtos.AllAppointmentsResult(a.id, ud.fullName, up.fullName, a.date, a.startTime, a.status) " +
+            "FROM AppointmentEntity a " +
+            "JOIN DoctorEntity d ON a.doctorId = d.id " +
+            "JOIN UserEntity ud ON d.id = ud.id " +
+            "JOIN PatientEntity p ON a.patientId = p.id " +
+            "JOIN UserEntity up ON p.id = up.id " +
+            "WHERE a.date = :date ")
+    List<AllAppointmentsResult> findAllAppointmentsByDate(@Param("date") LocalDate date);
 
     List<AppointmentEntity> findByPatientId(UUID patientId);
 
