@@ -47,7 +47,7 @@ public class DoctorController {
 
 
     // Register a new doctor by a Super Admin
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @PostMapping
     public ResponseEntity<DoctorRegistrationResult> create(@Valid @RequestBody DoctorRegistrationRequest request){
         RegisterDoctorCommand command = new RegisterDoctorCommand(
@@ -68,8 +68,19 @@ public class DoctorController {
     public ResponseEntity<DoctorResponse> getDoctor(@PathVariable UUID id){
          Doctor doctor = doctorService.getDoctorById(id);
 
-         return ResponseEntity.status(HttpStatus.FOUND).body(toResponse(doctor));
+         return ResponseEntity.ok(toResponse(doctor));
     }
+
+    @GetMapping
+    public ResponseEntity<List<DoctorResponse>> getAllDoctors(){
+
+        List<Doctor> doctors = doctorService.getAllDoctors();
+
+        List<DoctorResponse> response = doctors.stream().map(this::toResponse).toList();
+
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping
     public ResponseEntity<List<DoctorResponse>> searchBySpecialty(@RequestParam Specialty specialty){
@@ -77,9 +88,11 @@ public class DoctorController {
 
         List<DoctorResponse> doctorsResponse = doctors.stream().map(this::toResponse).toList();
 
-        return ResponseEntity.status(HttpStatus.FOUND).body(doctorsResponse);
+        return ResponseEntity.ok(doctorsResponse);
 
     }
+
+
 
     // ------------------ DOCTOR SCHEDULE ------------------
 
@@ -89,7 +102,7 @@ public class DoctorController {
 
         List<DoctorScheduleResponse> doctorSchedulesResponse = doctorSchedules.stream().map(this::toResponse).toList();
 
-        return ResponseEntity.status(HttpStatus.FOUND).body(doctorSchedulesResponse);
+        return ResponseEntity.ok(doctorSchedulesResponse);
     }
 
     @PreAuthorize("hasRole('DOCTOR')")

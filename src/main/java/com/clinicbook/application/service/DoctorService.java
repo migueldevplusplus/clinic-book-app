@@ -2,6 +2,7 @@ package com.clinicbook.application.service;
 
 import com.clinicbook.application.dtos.*;
 import com.clinicbook.domain.enums.Specialty;
+import com.clinicbook.domain.enums.UserRole;
 import com.clinicbook.domain.exception.DoctorNotFoundException;
 import com.clinicbook.domain.exception.InvalidOwnerException;
 import com.clinicbook.domain.exception.ScheduleNotFoundException;
@@ -22,7 +23,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Service
 public class DoctorService {
-    private final DoctorRepositoryPort doctorRepositoryPort;
+    private final DoctorRepositoryPort doctorRepository;
     private final DoctorScheduleRepositoryPort doctorScheduleRepositoryPort;
     private final AuthService authService;
 
@@ -31,29 +32,39 @@ public class DoctorService {
 
 
     @Transactional
-    public DoctorRegistrationResult registerDoctor(RegisterDoctorCommand command){
+    public DoctorRegistrationResult registerDoctor(RegisterDoctorCommand command) {
 
-        // FETCH
+        RegisterUserCommand userCommand = new RegisterUserCommand(
+                command.fullName(),
+                command.email(),
+                command.rawPassword(),
+                UserRole.DOCTOR
+        );
 
-        User user = authService.createDoctorUser(command);
+        User user = authService.createUser(userCommand);
 
-        Doctor doctor = new Doctor(user.getId(), user, command.specialty(), command.consultationDurationMinutes());
+        Doctor doctor = new Doctor(
+                user.getId(),
+                user,
+                command.specialty(),
+                command.consultationDurationMinutes()
+        );
 
-        doctorRepositoryPort.save(doctor);
+        doctorRepository.save(doctor);
 
         return new DoctorRegistrationResult(
-                doctor.getId(), command.email(), command.fullName(), doctor.getSpecialty()
+                doctor.getId(), user.getEmail(), user.getFullName(), doctor.getSpecialty()
         );
     }
 
     public List<Doctor> searchBySpecialty(Specialty specialty){
         // FETCH
-        return doctorRepositoryPort.findBySpecialty(specialty);
+        return doctorRepository.findBySpecialty(specialty);
     }
 
     public Doctor getDoctorById(UUID id){
         // FETCH
-        return doctorRepositoryPort.findById(id)
+        return doctorRepository.findById(id)
                 .orElseThrow(() -> new DoctorNotFoundException(id));
     }
 
@@ -65,7 +76,7 @@ public class DoctorService {
     @Transactional(readOnly = true)
     public List<DoctorSchedule> getWeeklySchedule(UUID doctorId){
 
-        if(!doctorRepositoryPort.existsById(doctorId)){
+        if(!doctorRepository.existsById(doctorId)){
             throw new DoctorNotFoundException(doctorId);
         }
 
@@ -114,4 +125,7 @@ public class DoctorService {
         doctorScheduleRepositoryPort.delete(scheduleId);
     }
 
+    public List<Doctor> getAllDoctors() {
+        return doctorRepository.findAll();
+    }
 }
