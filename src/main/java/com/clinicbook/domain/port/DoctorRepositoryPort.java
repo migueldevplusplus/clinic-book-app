@@ -12,5 +12,6 @@ public interface DoctorRepositoryPort {
     boolean existsById(UUID id);
     Optional<Doctor> findById(UUID id);
     List<Doctor> findBySpecialty(Specialty specialty);
+    List<Doctor> findAll();
     
 }

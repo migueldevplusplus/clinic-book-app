@@ -54,4 +54,9 @@ public class DoctorRepositoryImpl implements DoctorRepositoryPort {
                 .stream()
                 .map(doctorMapper::toDomain).toList();
     }
+
+    @Override
+    public List<Doctor> findAll() {
+        return doctorJpaRepo.findAll().stream().map(doctorMapper::toDomain).toList();
+    }
 }

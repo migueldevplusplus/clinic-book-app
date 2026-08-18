@@ -82,7 +82,7 @@ public class DoctorController {
     }
 
 
-    @GetMapping
+    @GetMapping(params = "specialty")
     public ResponseEntity<List<DoctorResponse>> searchBySpecialty(@RequestParam Specialty specialty){
         List<Doctor> doctors = doctorService.searchBySpecialty(specialty);
 
