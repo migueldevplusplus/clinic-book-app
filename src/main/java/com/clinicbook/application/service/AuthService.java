@@ -1,12 +1,11 @@
 package com.clinicbook.application.service;
 
-import com.clinicbook.application.dtos.AuthResult;
-import com.clinicbook.application.dtos.LoginUserCommand;
-import com.clinicbook.application.dtos.RegisterDoctorCommand;
-import com.clinicbook.application.dtos.RegisterPatientCommand;
+import com.clinicbook.application.dtos.*;
 import com.clinicbook.domain.enums.UserRole;
+import com.clinicbook.domain.exception.DisabledUserException;
 import com.clinicbook.domain.exception.EmailAlreadyInUseException;
 import com.clinicbook.domain.exception.InvalidCredentialsException;
+import com.clinicbook.domain.exception.UserNotFoundException;
 import com.clinicbook.domain.model.Patient;
 import com.clinicbook.domain.model.User;
 import com.clinicbook.domain.port.JwtTokenProviderPort;
@@ -17,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -33,7 +33,7 @@ public class AuthService {
             throw new EmailAlreadyInUseException(command.email());
         }
         String hashedPassword = passwordHasher.hash(command.rawPassword());
-        User newUser = new User(UUID.randomUUID(), command.fullName(), command.email(), hashedPassword, command.role());
+        User newUser = new User(UUID.randomUUID(), command.fullName(), command.email(), hashedPassword, UserRole.PATIENT);
         Patient patient = new Patient(newUser.getId(), command.birthDate(), command.phoneNumber(), newUser);
 
         userRepository.save(newUser);
@@ -43,22 +43,16 @@ public class AuthService {
         return new AuthResult(token, command.fullName(), newUser.getId(), newUser.getRole());
     }
 
-    public User createDoctorUser(RegisterDoctorCommand command){
-        if(userRepository.existsByEmail(command.email())){
+    @Transactional
+    public User createUser(RegisterUserCommand command) {
+        if (userRepository.existsByEmail(command.email())) {
             throw new EmailAlreadyInUseException(command.email());
         }
-
         String hashedPassword = passwordHasher.hash(command.rawPassword());
-
-        User user = new User(
-                UUID.randomUUID(),
-                command.fullName(),
-                command.email(),
-                hashedPassword,
-                UserRole.DOCTOR);
-
+        User user = new User(UUID.randomUUID(), command.fullName(), command.email(), hashedPassword, command.role());
         return userRepository.save(user);
     }
+
 
     public AuthResult login(LoginUserCommand command) {
         User user = userRepository.findByEmail(command.email())
@@ -66,7 +60,28 @@ public class AuthService {
         if (!passwordHasher.matches(command.rawPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException("ERROR: Invalid credentials");
         }
+        if(!user.isActive()){
+            throw new DisabledUserException("This user is disabled and cannot log in");
+        }
         String token = tokenProvider.generateToken(user);
         return new AuthResult(token, user.getFullName(), user.getId(), user.getRole());
+    }
+
+    public List<UserResult> getAllUsers(){
+        List<User> users = userRepository.findAll();
+
+        return users
+                .stream()
+                .map(user -> new UserResult(user.getId(), user.getFullName(), user.getRole(), user.isActive())).toList();
+    }
+
+    public void disableUser(UUID userId){
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new UserNotFoundException("This user couldn't be found")
+        );
+
+        user.disable();
+
+        userRepository.save(user);
     }
 }

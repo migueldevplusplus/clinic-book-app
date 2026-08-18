@@ -7,6 +7,7 @@ import com.clinicbook.infrastructure.persistence.models.UserEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,5 +38,8 @@ public class UserRepositoryImpl implements UserRepositoryPort {
     public boolean existsByEmail(String email) {
         return userJpaRepo.existsByEmail(email);
     }
+
+    @Override
+    public List<User> findAll() { return userJpaRepo.findAll().stream().map(userMapper::toDomain).toList(); }
 
 }
