@@ -169,12 +169,12 @@ erDiagram
         timestamp disabled_at "null = active"
     }
     PATIENT {
-        uuid id PK_FK
+        uuid id PK "same value as clinic_user.id"
         date birth_date
         varchar phone_number
     }
     DOCTOR {
-        uuid id PK_FK
+        uuid id PK "same value as clinic_user.id"
         varchar specialty
         int consultation_duration_minutes
     }
