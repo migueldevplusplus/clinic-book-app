@@ -116,8 +116,8 @@ public class Appointment {
                 && other.startTime.isBefore(this.endTime);
     }
 
-    public boolean overlapsWith(LocalTime start, LocalTime end){
-        return !start.isBefore(startTime) && !end.isAfter(endTime);
+    public boolean overlapsWith(LocalTime newStartTime, LocalTime newEndTime) {
+        return newStartTime.isBefore(endTime) && newEndTime.isAfter(startTime);
     }
 
 
