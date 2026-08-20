@@ -13,7 +13,6 @@ import com.clinicbook.domain.port.AppointmentRepositoryPort;
 import com.clinicbook.domain.port.DoctorRepositoryPort;
 import com.clinicbook.domain.port.DoctorScheduleRepositoryPort;
 import lombok.AllArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -32,21 +31,27 @@ public class AppointmentService {
     // COMMANDS
 
     public Appointment createAppointment(CreateAppointmentCommand command){
+
+        int doctorConsultationDurationMinutes = doctorRepository.findById(command.doctorId())
+                .orElseThrow(() -> new DoctorNotFoundException(command.doctorId()))
+                .getConsultationDurationMinutes();
+
+        if(!command.startTime().plusMinutes(doctorConsultationDurationMinutes).equals(command.endTime())){
+            throw new InvalidScheduleException("The new appointment duration doesn't match the doctor's consultation duration");
+        }
+
         Appointment appointment = new Appointment(
                 UUID.randomUUID(), command.patientId(), command.doctorId(), command.date(),command.startTime(), command.endTime()
         );
 
-        List<DoctorSchedule> schedules = doctorScheduleRepository.findByDoctorIdAndDayOfWeek(command.doctorId(), command.date().getDayOfWeek());
+        List<TimeSlot> availableBlocks = this.getAvailability(command.date(), command.doctorId());
 
-        boolean isWithin =
-                schedules.stream().anyMatch(s -> s.coversInterval(appointment.getStartTime(), appointment.getEndTime()));
+        boolean isAvailable = availableBlocks
+                .stream()
+                .anyMatch(ts -> ts.getTime().equals(appointment.getStartTime()) && ts.isAvailable());
 
-        if(!isWithin){
-            throw new AppointmentNotInScheduleException("The appointment is not within the doctor schedule");
-        }
-
-        if (appointmentRepository.findAllByDoctorIdAndDate(command.doctorId(), command.date()).stream().anyMatch(appointment::overlapsWith)){
-            throw new AppointmentOverlapException("The new appointment overlaps with other");
+        if(!isAvailable){
+            throw new TimeSlotNotAvailableException("The new appointment interval of time is not among the available blocks");
         }
 
         return appointmentRepository.save(appointment);
