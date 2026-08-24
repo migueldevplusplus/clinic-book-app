@@ -20,4 +20,4 @@ public record DoctorRegistrationRequest(
 
         @Positive(message = "Consultation duration must be positive")
         int consultationDurationMinutes
-) {}
+) { }

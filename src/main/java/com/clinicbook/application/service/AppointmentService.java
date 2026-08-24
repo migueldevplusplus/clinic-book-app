@@ -14,6 +14,7 @@ import com.clinicbook.domain.port.DoctorRepositoryPort;
 import com.clinicbook.domain.port.DoctorScheduleRepositoryPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,6 +31,7 @@ public class AppointmentService {
 
     // COMMANDS
 
+    @Transactional
     public Appointment createAppointment(CreateAppointmentCommand command){
 
         int doctorConsultationDurationMinutes = doctorRepository.findById(command.doctorId())
