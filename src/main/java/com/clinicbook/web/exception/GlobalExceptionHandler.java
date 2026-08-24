@@ -66,6 +66,29 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(TimeSlotNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleTimeSlotNotAvailable(TimeSlotNotAvailableException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DisabledUserException.class)
+    public ResponseEntity<ErrorResponse> handleDisabledUser(DisabledUserException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    // The appointment lifecycle rejects illegal transitions (confirming an already
+    // confirmed appointment, completing a pending one...) with IllegalStateException.
+    // Without this handler those legitimate business rejections surface as a 500.
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     // Safety net: the remaining domain invariants (Doctor, User, Patient...) still
     // signal bad input with IllegalArgumentException.
     @ExceptionHandler(IllegalArgumentException.class)
