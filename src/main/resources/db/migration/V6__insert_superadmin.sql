@@ -1,3 +1,7 @@
+-- Development seed: the system needs one SUPER_ADMIN to bootstrap doctors and
+-- receptionists, since there is no public endpoint that creates one.
+-- The password hash below is a local development credential.
+-- Replace it before deploying this anywhere reachable.
 INSERT INTO clinic_user VALUES (
                                    gen_random_uuid(),
                                    'Super Admin',

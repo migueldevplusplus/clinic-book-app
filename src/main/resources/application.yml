@@ -1,3 +1,5 @@
 jwt:
-  secret: "clinicbook-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm"
-  expiration: 86400000
+  # Development default so the project runs out of the box.
+  # Any real deployment must override JWT_SECRET with its own 256-bit key.
+  secret: ${JWT_SECRET:dev-only-key-do-not-use-in-production-must-be-at-least-256-bits-long-for-hs256}
+  expiration: ${JWT_EXPIRATION:86400000}
