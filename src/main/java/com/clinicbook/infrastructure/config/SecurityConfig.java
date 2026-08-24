@@ -61,7 +61,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Internal ERROR dispatch: the JwtAuthFilter does not run on it, so
                         // requiring auth here would mask the real error with a 401.
                         .requestMatchers("/error").permitAll()
