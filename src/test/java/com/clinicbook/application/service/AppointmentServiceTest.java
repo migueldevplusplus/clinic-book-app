@@ -4,6 +4,7 @@ import com.clinicbook.application.dtos.CreateAppointmentCommand;
 import com.clinicbook.domain.enums.AppointmentStatus;
 import com.clinicbook.domain.exception.*;
 import com.clinicbook.domain.model.Appointment;
+import com.clinicbook.domain.model.Doctor;
 import com.clinicbook.domain.model.DoctorSchedule;
 import com.clinicbook.domain.port.AppointmentRepositoryPort;
 import com.clinicbook.domain.port.DoctorRepositoryPort;
@@ -126,23 +127,33 @@ class AppointmentServiceTest {
 
     // ---------- createAppointment ----------
 
+    private static final int CONSULTATION_MINUTES = 30;
+
+    /** A doctor working that day from 10:00 to 11:00, i.e. slots at 10:00 and 10:30. */
+    private void givenDoctorWorking(UUID doctorId, LocalDate date) {
+        Doctor doctor = mock(Doctor.class);
+        when(doctor.getConsultationDurationMinutes()).thenReturn(CONSULTATION_MINUTES);
+        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
+
+        DoctorSchedule schedule = new DoctorSchedule(
+                UUID.randomUUID(), doctorId, date.getDayOfWeek(),
+                LocalTime.of(10, 0), LocalTime.of(11, 0)
+        );
+        when(doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctorId, date.getDayOfWeek()))
+                .thenReturn(List.of(schedule));
+    }
+
     @Test
-    void shouldCreateAppointmentWhenWithinScheduleAndNoOverlap() {
+    void shouldCreateAppointmentWhenSlotIsFree() {
         UUID doctorId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         LocalDate date = LocalDate.now().plusDays(1);
-        LocalTime start = LocalTime.of(10, 0);
-        LocalTime end = LocalTime.of(10, 30);
 
-        CreateAppointmentCommand command = new CreateAppointmentCommand(patientId, doctorId, date, start, end);
+        CreateAppointmentCommand command = new CreateAppointmentCommand(
+                patientId, doctorId, date, LocalTime.of(10, 0), LocalTime.of(10, 30));
 
-        DoctorSchedule schedule = mock(DoctorSchedule.class);
-        when(schedule.coversInterval(start, end)).thenReturn(true);
-
-        when(doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctorId, date.getDayOfWeek()))
-                .thenReturn(List.of(schedule));
-        when(appointmentRepository.findAllByDoctorIdAndDate(doctorId, date))
-                .thenReturn(List.of());
+        givenDoctorWorking(doctorId, date);
+        when(appointmentRepository.findAllByDoctorIdAndDate(doctorId, date)).thenReturn(List.of());
         when(appointmentRepository.save(any(Appointment.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0)); // It returns the same argument that was passed to 'save'
 
@@ -154,46 +165,114 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void shouldThrowWhenAppointmentNotInDoctorSchedule() {
+    void shouldThrowWhenDurationDoesNotMatchTheDoctorConsultation() {
         UUID doctorId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         LocalDate date = LocalDate.now().plusDays(1);
-        LocalTime start = LocalTime.of(10, 0);
-        LocalTime end = LocalTime.of(10, 30);
 
-        CreateAppointmentCommand command = new CreateAppointmentCommand(patientId, doctorId, date, start, end);
+        // 45 minutes against a doctor who only takes 30-minute consultations
+        CreateAppointmentCommand command = new CreateAppointmentCommand(
+                patientId, doctorId, date, LocalTime.of(10, 0), LocalTime.of(10, 45));
 
+        Doctor doctor = mock(Doctor.class);
+        when(doctor.getConsultationDurationMinutes()).thenReturn(CONSULTATION_MINUTES);
+        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
+
+        assertThrows(InvalidScheduleException.class,
+                () -> appointmentService.createAppointment(command));
+
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    /**
+     * Guards the slot grid: 10:15 lasts the right 30 minutes and falls inside the
+     * doctor's working hours, but it is not one of the slots the availability
+     * endpoint offers. Accepting it would let a booking sit across two slots and
+     * silently disappear from the agenda.
+     */
+    @Test
+    void shouldThrowWhenStartTimeIsNotAlignedWithTheSlotGrid() {
+        UUID doctorId = UUID.randomUUID();
+        UUID patientId = UUID.randomUUID();
+        LocalDate date = LocalDate.now().plusDays(1);
+
+        CreateAppointmentCommand command = new CreateAppointmentCommand(
+                patientId, doctorId, date, LocalTime.of(10, 15), LocalTime.of(10, 45));
+
+        givenDoctorWorking(doctorId, date);
+        when(appointmentRepository.findAllByDoctorIdAndDate(doctorId, date)).thenReturn(List.of());
+
+        assertThrows(TimeSlotNotAvailableException.class,
+                () -> appointmentService.createAppointment(command));
+
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowWhenDoctorHasNoScheduleThatDay() {
+        UUID doctorId = UUID.randomUUID();
+        UUID patientId = UUID.randomUUID();
+        LocalDate date = LocalDate.now().plusDays(1);
+
+        CreateAppointmentCommand command = new CreateAppointmentCommand(
+                patientId, doctorId, date, LocalTime.of(10, 0), LocalTime.of(10, 30));
+
+        Doctor doctor = mock(Doctor.class);
+        when(doctor.getConsultationDurationMinutes()).thenReturn(CONSULTATION_MINUTES);
+        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
         when(doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctorId, date.getDayOfWeek()))
                 .thenReturn(List.of());
+        when(appointmentRepository.findAllByDoctorIdAndDate(doctorId, date)).thenReturn(List.of());
 
-        assertThrows(AppointmentNotInScheduleException.class,
+        assertThrows(TimeSlotNotAvailableException.class,
                 () -> appointmentService.createAppointment(command));
     }
 
     @Test
-    void shouldThrowWhenAppointmentOverlapsExisting() {
+    void shouldThrowWhenSlotIsAlreadyTaken() {
         UUID doctorId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         LocalDate date = LocalDate.now().plusDays(1);
-        LocalTime start = LocalTime.of(10, 0);
-        LocalTime end = LocalTime.of(10, 30);
 
-        CreateAppointmentCommand command = new CreateAppointmentCommand(patientId, doctorId, date, start, end);
-
-        DoctorSchedule schedule = mock(DoctorSchedule.class);
-        when(schedule.coversInterval(start, end)).thenReturn(true);
+        CreateAppointmentCommand command = new CreateAppointmentCommand(
+                patientId, doctorId, date, LocalTime.of(10, 0), LocalTime.of(10, 30));
 
         Appointment existing = new Appointment(
                 UUID.randomUUID(), UUID.randomUUID(), doctorId, date,
-                LocalTime.of(10, 15), LocalTime.of(10, 45)
+                LocalTime.of(10, 0), LocalTime.of(10, 30)
         );
 
-        when(doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctorId, date.getDayOfWeek()))
-                .thenReturn(List.of(schedule));
-        when(appointmentRepository.findAllByDoctorIdAndDate(doctorId, date))
-                .thenReturn(List.of(existing));
+        givenDoctorWorking(doctorId, date);
+        when(appointmentRepository.findAllByDoctorIdAndDate(doctorId, date)).thenReturn(List.of(existing));
 
-        assertThrows(AppointmentOverlapException.class,
+        assertThrows(TimeSlotNotAvailableException.class,
                 () -> appointmentService.createAppointment(command));
+
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldFreeTheSlotWhenTheExistingAppointmentIsCancelled() {
+        UUID doctorId = UUID.randomUUID();
+        UUID patientId = UUID.randomUUID();
+        LocalDate date = LocalDate.now().plusDays(1);
+
+        CreateAppointmentCommand command = new CreateAppointmentCommand(
+                patientId, doctorId, date, LocalTime.of(10, 0), LocalTime.of(10, 30));
+
+        Appointment cancelled = new Appointment(
+                UUID.randomUUID(), UUID.randomUUID(), doctorId, date,
+                LocalTime.of(10, 0), LocalTime.of(10, 30)
+        );
+        cancelled.cancel();
+
+        givenDoctorWorking(doctorId, date);
+        when(appointmentRepository.findAllByDoctorIdAndDate(doctorId, date)).thenReturn(List.of(cancelled));
+        when(appointmentRepository.save(any(Appointment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Appointment result = appointmentService.createAppointment(command);
+
+        assertEquals(AppointmentStatus.PENDING, result.getStatus());
     }
 }
