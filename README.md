@@ -1,124 +1,59 @@
 # Clinic Book
 
-**A medical appointment scheduling API where the booking rules live in the domain, not in the controllers.**
+**Medical appointment scheduling API — Java 21, Spring Boot 4, hexagonal architecture.**
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![Flyway](https://img.shields.io/badge/Flyway-versioned_schema-CC0200?logo=flyway&logoColor=white)
-![Testcontainers](https://img.shields.io/badge/Testcontainers-integration_tests-291A3F?logo=docker&logoColor=white)
-![OpenAPI](https://img.shields.io/badge/OpenAPI-Swagger_UI-85EA2D?logo=swagger&logoColor=black)
+![Flyway](https://img.shields.io/badge/Flyway-migrations-CC0200?logo=flyway&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 
-Clinic Book is the backend of a clinic's booking system. A super admin onboards the staff, doctors publish the hours they work, patients book the free slots, and the front desk confirms, completes or cancels. It is a small domain with a surprising number of ways to get it wrong — which is exactly what makes it interesting to model properly.
+![Booking screen](docs/booking.png)
 
-**Frontend:** [`clinic-book-frontend`](https://github.com/migueldevplusplus/clinic-book-frontend) · **Docs:** `http://localhost:8080/swagger-ui.html` once running
-
----
-
-## How a booking actually happens
-
-This is the flow the whole system is built around. Everything else in this README is a detail of one of these steps.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant D as Doctor
-    participant P as Patient
-    participant API as Clinic Book API
-    participant R as Receptionist
-
-    D->>API: POST /api/doctors/schedules<br/>"I work Mondays 08:00–12:00"
-    Note over API: Rejected if it overlaps<br/>another block of mine
-
-    P->>API: GET /api/appointments/{doctorId}?date=…
-    API-->>P: [08:00 free, 08:30 taken, 09:00 free…]
-    Note over API: Slots are computed, never stored:<br/>schedule ÷ consultation duration − booked
-
-    P->>API: POST /api/appointments<br/>"08:00–08:30 please"
-    Note over API: Must be exactly one free slot,<br/>or the request is refused
-    API-->>P: 201 · PENDING
-
-    R->>API: PATCH /api/appointments/{id}/confirm
-    API-->>R: 200 · CONFIRMED
-
-    D->>API: PATCH /api/appointments/{id}/complete
-    Note over API: Only the doctor who owns it
-    API-->>D: 200 · COMPLETED
-```
-
-### The slot grid
-
-A doctor has a `consultationDurationMinutes`. Their published blocks are sliced into a grid of that size, and **an appointment is always exactly one cell of that grid** — never 45 minutes against a 30-minute doctor, never starting at 10:15 on a 10:00/10:30 grid.
-
-```
-Doctor's block:   08:00 ──────────────────────────────── 12:00
-Grid (30 min):    │ 08:00 │ 08:30 │ 09:00 │ 09:30 │ …
-Booked:                   │▓▓▓▓▓▓▓│
-Offered:          │ free  │ taken │ free  │ free  │ …
-```
-
-Booking does not re-derive any of this. It asks the same availability function the patient just called, and accepts only what that function says is free — so what you see and what you can book can never disagree.
+<sub>Slot availability served by the API: the grid is derived from the doctor's weekly schedule and 30-minute consultation length, and 10:00 is offered as unavailable because it is already booked.</sub>
 
 ---
 
-## The rules it enforces
+## Overview
 
-| Rule | Where it lives | If broken |
-|---|---|---|
-| An appointment cannot be in the past | `Appointment` constructor | `400` |
-| Start must be before end | `Appointment` constructor | `400` |
-| Duration must equal the doctor's consultation length | `AppointmentService` | `400` |
-| The slot must exist in the doctor's grid and be free | `AppointmentService` + `getAvailability` | `409` |
-| A schedule block cannot overlap another of the same doctor | `DoctorSchedule.overlapsWith` | `409` |
-| Only `PENDING` can be confirmed | `Appointment.confirm()` | `409` |
-| Only `CONFIRMED` can be completed | `Appointment.complete()` | `409` |
-| Cancelled appointments stop blocking their slot | `Appointment.isActive()` | — |
-| A patient may only cancel their own appointment | `AppointmentService` | `403` |
-| A doctor may only complete or delete what they own | `AppointmentService` / `DoctorService` | `403` |
-| An email can only be registered once | `AuthService` | `409` |
-| A disabled account cannot log in | `AuthService` | `403` |
+Backend for a private clinic's booking system. Patients browse a doctor's free slots and book them, doctors publish the hours they work and close their appointments, and the front desk confirms, cancels and books on behalf of walk-ins.
 
-Every one of these fails with the same JSON envelope:
+Built with Spring Boot 4 and **hexagonal architecture**: the domain package has no framework imports, so the booking rules are plain Java and tested without a database. Data lives in PostgreSQL with a schema versioned by Flyway, and the API is documented with OpenAPI.
 
-```json
-{ "message": "That time slot is not available", "status": 409, "timestamp": "2026-08-20T14:32:11.482" }
-```
-
-### Appointment lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> PENDING: booked by patient or front desk
-    PENDING --> CONFIRMED: receptionist
-    CONFIRMED --> COMPLETED: doctor (own) or receptionist
-    PENDING --> CANCELLED: patient (own) or receptionist
-    CONFIRMED --> CANCELLED: patient (own) or receptionist
-    COMPLETED --> [*]
-    CANCELLED --> [*]
-```
-
-The transitions are methods on `Appointment`. Calling `complete()` on a `PENDING` appointment throws regardless of who asked or which endpoint they came through.
+- **Status:** feature-complete for the core booking flow
+- **Language:** Java 21
+- **Reference client:** [`clinic-book-frontend`](https://github.com/migueldevplusplus/clinic-book-frontend) — a small React app used to exercise the API
 
 ---
 
-## Who can do what
+## Key Features
 
-| | Patient | Doctor | Receptionist | Super admin |
-|---|:--:|:--:|:--:|:--:|
-| Sign up / log in | ✅ | ✅ | ✅ | ✅ |
-| Browse doctors and availability | ✅ | ✅ | ✅ | ✅ |
-| Book for themselves | ✅ | | | |
-| Book on behalf of a patient | | | ✅ | |
-| Confirm an appointment | | | ✅ | |
-| Complete an appointment | | own only | ✅ | |
-| Cancel an appointment | own only | | ✅ | |
-| Publish / delete working hours | | own only | | |
-| Register patients from the desk | | | ✅ | ✅ |
-| Search patients | | | ✅ | ✅ |
-| Onboard doctors and receptionists | | | | ✅ |
-| List and disable accounts | | | | ✅ |
+- **Four roles with real authorization** — `PATIENT`, `DOCTOR`, `RECEPTIONIST`, `SUPER_ADMIN`, enforced per endpoint
+- **Stateless JWT authentication** with BCrypt password hashing
+- **Weekly doctor schedules** with overlap detection
+- **Computed slot availability** — free/busy times are derived from the doctor's schedule and consultation length, never stored
+- **Booking validated against availability** — a request must match exactly one free slot, so the API and the UI can never disagree
+- **Appointment lifecycle as a state machine** — `PENDING → CONFIRMED → COMPLETED`, cancellable from any active state, enforced inside the domain
+- **Ownership checks beyond roles** — a doctor may only close their own appointments, a patient only cancel theirs
+- **Soft account disabling** — users are disabled, never deleted, so appointment history survives
+- **Versioned schema** with Flyway and `ddl-auto=validate`
+- **Consistent error contract** — every domain exception maps to a meaningful HTTP status
+- **Containerized** — one command brings up the API and the database
 
-Roles come from the JWT and are checked with `@PreAuthorize`. Ownership ("own only") is checked separately in the service against the authenticated user id — the role gets you in the door, ownership decides which record you may touch.
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Language | Java 21 |
+| Framework | Spring Boot 4.1.0 — Web MVC, Security, Validation, Data JPA |
+| Database | PostgreSQL 16 |
+| Migrations | Flyway |
+| Auth | jjwt 0.11.5 (HS256) + BCrypt |
+| Docs | springdoc-openapi 3.1.0 (Swagger UI) |
+| Testing | JUnit 5, Mockito, Testcontainers |
+| Build & runtime | Maven, Docker Compose |
 
 ---
 
@@ -127,30 +62,20 @@ Roles come from the JWT and are checked with `@PreAuthorize`. Ownership ("own on
 Ports and adapters, with one rule enforced throughout: **`domain/` imports nothing from Spring, JPA or the web.**
 
 ```
-web/            controllers · request & response records · GlobalExceptionHandler
-      ↓ commands
-application/    AuthService · AppointmentService · DoctorService · PatientService
-      ↓ ports (interfaces)
-domain/         Appointment · Doctor · DoctorSchedule · Patient · User · TimeSlot
-      ↑ implements
-infrastructure/ JPA entities · repositories · mappers · JWT · BCrypt · security config
+com.clinicbook
+├── domain/            Models with the business rules, enums, exceptions, ports
+├── application/       Use cases (services) + commands and results
+├── infrastructure/    JPA entities, repositories, mappers, JWT, security config
+└── web/               Controllers, request/response records, exception handler
 ```
 
-Three DTO vocabularies, deliberately kept apart: `web/request` and `web/response` are the HTTP contract, `application/dtos` are commands and results, and `domain/model` are the objects with the rules. A JSON field rename never reaches the domain, and a domain refactor never breaks the API.
-
-**Ports** live in `domain/port` and are implemented in `infrastructure`:
-
-| Port | Hides |
-|---|---|
-| `UserRepositoryPort`, `PatientRepositoryPort`, `DoctorRepositoryPort`, `DoctorScheduleRepositoryPort`, `AppointmentRepositoryPort` | Spring Data JPA, PostgreSQL, entity↔model mapping |
-| `PasswordHasherPort` | BCrypt |
-| `JwtTokenProviderPort` | jjwt / HS256 |
-
-**Two constructors per model.** A public one that enforces the invariants when something is created, and a private one reached through a static `reconstruct(...)` used only when loading from the database — so a row saved last year is not re-validated against today's rules like *"the date cannot be in the past"*.
+- **Ports** (`domain/port`) invert every external dependency: repositories, password hashing and token issuing are interfaces the domain owns and `infrastructure` implements.
+- **Three DTO vocabularies** stay separate — web requests/responses, application commands/results, and domain models — so a JSON rename never reaches the domain.
+- **Two constructors per model**: a public one that enforces invariants on creation, and a private one reached through `reconstruct(...)` when loading from the database, so old rows are not revalidated against creation-time rules.
 
 ---
 
-## Data model
+## Data Model
 
 ```mermaid
 erDiagram
@@ -196,17 +121,34 @@ erDiagram
     }
 ```
 
-`patient.id` and `doctor.id` **are** the `clinic_user.id` — a shared primary key. One person, one identity, one row per role-specific extension. Schedules are weekly and recurring (`day_of_week`, not a date), so a doctor describes their week once instead of filling a calendar.
-
-Accounts are disabled, never deleted (`disabled_at`): appointment history has to survive the account.
-
-The schema is 7 Flyway migrations and Hibernate runs with `ddl-auto=validate` — it checks the mapping against the real schema at startup and refuses to boot on drift, rather than quietly altering tables.
+`patient.id` and `doctor.id` **are** the `clinic_user.id` — a shared primary key, so one person is one identity with role-specific data in its own table. Schedules are weekly and recurring, so a doctor describes their week once instead of filling a calendar.
 
 ---
 
-## Running it
+## Roles & Permissions
 
-**Everything at once** (API + PostgreSQL):
+| | Patient | Doctor | Receptionist | Super admin |
+|---|:--:|:--:|:--:|:--:|
+| Browse doctors and availability | ✅ | ✅ | ✅ | ✅ |
+| Book for themselves | ✅ | | | |
+| Book on behalf of a patient | | | ✅ | |
+| Confirm an appointment | | | ✅ | |
+| Complete an appointment | | own only | ✅ | |
+| Cancel an appointment | own only | | ✅ | |
+| Publish / delete working hours | | own only | | |
+| Register and search patients | | | ✅ | ✅ |
+| Onboard doctors and receptionists | | | | ✅ |
+| List and disable accounts | | | | ✅ |
+
+Roles come from the JWT and are checked with `@PreAuthorize`. Ownership is verified separately in the service against the authenticated user id.
+
+---
+
+## Getting Started
+
+**Prerequisites:** JDK 21 and Docker Desktop.
+
+### Option A — everything in Docker
 
 ```bash
 git clone https://github.com/migueldevplusplus/clinic-book-app.git
@@ -214,95 +156,99 @@ cd clinic-book-app
 docker compose up --build
 ```
 
-API on `:8080`, database on `:5433`, Flyway builds the schema and seeds a super admin on first boot.
-
-**Just the database, app from your IDE:**
+### Option B — database in Docker, app from your IDE
 
 ```bash
 docker compose up -d db
 ./mvnw spring-boot:run
 ```
 
-**Configuration** — the committed values are development defaults; anything real overrides them with environment variables:
+API on `http://localhost:8080`, PostgreSQL on `5433`. Flyway builds the schema and seeds a super admin on first boot.
+
+### Configuration
+
+Committed values are development defaults; every one is overridden by an environment variable.
 
 | Variable | Default |
 |---|---|
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5433/clinicbook` |
 | `SPRING_DATASOURCE_USERNAME` / `_PASSWORD` | `postgres` / `postgres` |
-| `JWT_SECRET` | a clearly-labelled dev key — **must be replaced**, HS256 needs ≥ 256 bits |
+| `JWT_SECRET` | a labelled dev key — **replace it in any real deployment** |
 | `JWT_EXPIRATION` | `86400000` (24 h) |
 
-### Trying it out
+---
 
-Open **`http://localhost:8080/swagger-ui.html`**, log in through `POST /api/auth/login`, paste the returned token into **Authorize**, and every protected endpoint becomes clickable from the page.
+## Security & Auth
 
-From the terminal it looks like this:
+- Stateless sessions — no server-side session store
+- `JwtAuthFilter` validates the bearer token and loads the user's UUID, so controllers never trust an id sent by the client
+- `@EnableMethodSecurity` + `@PreAuthorize` on every protected handler
+- Ownership violations return `403` through `InvalidOwnerException`, not just role mismatches
+- Auth failures return the same JSON error shape as the rest of the API
+- CORS restricted to the frontend origin
 
-```bash
-# The seeded super admin bootstraps everyone else
-TOKEN=$(curl -s -X POST localhost:8080/api/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"<super-admin-email>","password":"<super-admin-password>"}' | jq -r .token)
+**Flow:** `POST /api/auth/signup` or `/login` → returns a JWT → send it as `Authorization: Bearer <token>`.
 
-# Onboard a cardiologist who sees patients in 30-minute slots
-curl -X POST localhost:8080/api/doctors -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"fullName":"Ana Rivas","email":"ana@clinic.com","rawPassword":"supersecret123",
-       "specialty":"CARDIOLOGY","consultationDurationMinutes":30}'
+---
+
+## API Reference
+
+Open **`http://localhost:8080/swagger-ui.html`**, log in through `/api/auth/login`, paste the token into **Authorize**, and every endpoint becomes clickable from the page.
+
+![Swagger UI](docs/swagger.png)
+
+| Group | Endpoints |
+|---|---|
+| `/api/auth` | `POST /signup` · `POST /login` · `POST /receptionists` · `GET /users` · `PATCH /users/{id}/disable` |
+| `/api/doctors` | `POST /` · `GET /` · `GET /?specialty=` · `GET /{id}` · `GET /{id}/schedules` · `POST /schedules` · `DELETE /{id}/schedules` |
+| `/api/patients` | `POST /` · `GET /?query=` |
+| `/api/appointments` | `POST /` · `POST /receptionist` · `GET /{doctorId}?date=` *(availability)* · `GET /my` · `GET /agenda?date=` · `GET /upcoming-agenda` · `GET /all?date=` · `PATCH /{id}/confirm` · `PATCH /{id}/complete` · `PATCH /{id}/cancel` |
+
+Every failure returns the same envelope:
+
+```json
+{ "message": "That time slot is not available", "status": 409, "timestamp": "2026-08-21T14:32:11.482" }
 ```
 
----
-
-## API map
-
-`/api/auth` — `POST /signup` · `POST /login` · `POST /receptionists` · `GET /users` · `PATCH /users/{id}/disable`
-
-`/api/doctors` — `POST /` · `GET /` · `GET /?specialty=` · `GET /{id}` · `GET /{id}/schedules` · `POST /schedules` · `DELETE /{id}/schedules`
-
-`/api/patients` — `POST /` · `GET /?query=`
-
-`/api/appointments` — `POST /` · `POST /receptionist` · `GET /{doctorId}?date=` *(availability)* · `GET /my` · `GET /agenda?date=` · `GET /upcoming-agenda` · `GET /all?date=` · `GET /{doctorId}/receptionist?date=` · `PATCH /{id}/confirm` · `PATCH /{id}/complete` · `PATCH /{id}/cancel` *(+ `/receptionist` variants)*
-
-Everything except signup, login and the docs requires `Authorization: Bearer <token>`. Swagger UI has the full request and response shapes.
+| Exception | Status |
+|---|---|
+| Overlaps, duplicate email, taken slot, illegal state transition | `409` |
+| Not found (appointment, schedule, doctor, user) | `404` |
+| Ownership violation, disabled account | `403` |
+| Invalid credentials | `401` |
+| Validation errors, invalid schedule or duration | `400` |
 
 ---
 
-## Tests
+## Testing
 
 ```bash
 ./mvnw test
 ```
 
-`AppointmentServiceTest` drives the booking rules through mocked ports — state transitions, ownership violations, duration mismatches, off-grid start times, taken slots, and cancelled appointments releasing their slot again. Milliseconds, no database, because the rules do not need one.
-
-`ClinicBookApplicationTests` is the opposite end: it boots the whole application against a throwaway PostgreSQL 16 container via Testcontainers, so every build also replays the full Flyway chain on an empty database and catches a broken migration before anyone else does. **Docker must be running for this one.**
-
----
-
-## Known limits
-
-Being explicit about what this does not do yet:
-
-- **Concurrency.** Availability is checked and then the row is inserted. Two requests for the last free slot can both pass the check. The fix is a partial unique index on `(doctor_id, date, start_time)` over active appointments, so the database has the final word.
-- **No pagination.** `GET /api/auth/users`, patient search and a patient's own history return everything. Fine at clinic scale, wrong at hospital scale. Doing it properly here means defining a `PageQuery`/`PageResult` in the domain rather than leaking Spring's `Pageable` through the ports.
-- **No rescheduling.** Moving an appointment today means cancelling and booking again.
-- **No reminders or notifications.**
-- Test coverage is deep on appointments and thin on `AuthService` and `DoctorService`.
-- CORS is pinned to `http://localhost:5173` for the development frontend.
+- **`AppointmentServiceTest`** — the booking rules through mocked ports: state transitions, ownership, duration mismatches, off-grid start times, taken slots, and cancelled appointments releasing their slot. No database, milliseconds.
+- **`ClinicBookApplicationTests`** — boots the whole application against a throwaway PostgreSQL 16 container via Testcontainers, replaying the full Flyway chain on an empty schema on every build. *Requires Docker running.*
 
 ---
 
-## Decisions worth explaining
+## Why It Is Built This Way
 
-**Why hexagonal for a CRUD-looking app?** Because it is not CRUD. The value is in the rules — grids, overlaps, ownership, state transitions — and keeping them in plain Java means they are tested in milliseconds and readable without knowing Spring. The cost is real: more files, mappers to maintain, and friction whenever a framework feature (like `Pageable`) wants to reach through the ports. That trade paid off here; on a genuine CRUD service it would not.
+- **Hexagonal architecture** — the value here is the rules, not the CRUD; keeping them free of Spring makes them fast to test and readable without framework knowledge.
+- **Computed availability instead of a slots table** — no denormalized state to keep in sync when a doctor changes their hours.
+- **Booking reuses the availability function** — one source of truth, so the UI and the API cannot drift apart.
+- **Rich domain models** — `Appointment.confirm()` and `DoctorSchedule.overlapsWith()` keep invariants in one place instead of scattered `if`s.
+- **Flyway + `validate`** — schema changes are reviewed, versioned SQL; Hibernate refuses to boot on drift instead of altering tables silently.
+- **`PATCH` for confirm/complete/cancel** — partial state transitions, not resource replacements.
 
-**Why compute slots instead of storing them?** A `slots` table would need updating whenever a doctor changes their hours or their consultation length, and would drift out of sync the first time that failed. Deriving them from schedules and bookings means there is no second source of truth to reconcile.
+---
 
-**Why does booking call the availability function?** Because the alternative — booking re-implementing "is this valid?" — is how the UI and the API start disagreeing. One function answers the question, both paths use it.
+## Known Limits
 
-**Why `PATCH` for confirm/complete/cancel?** They are partial state transitions on an existing resource, not replacements of it.
-
-**Why Flyway with `validate` instead of `ddl-auto=update`?** Because `update` silently changes production schemas and cannot express a data migration or a drop. Versioned SQL is reviewable, repeatable, and runs identically on the integration test container.
+- **Account disabling is one-way and not immediate.** Disabling blocks future logins, but a token issued beforehand keeps working until it expires, since `CustomUserDetails` does not carry the account state. There is also no endpoint to re-enable an account, and nothing stops the super admin from disabling the only super admin — which would leave no one able to onboard staff. Completing it means adding `User.enable()`, a re-enable endpoint, a guard against self-disabling, and an `isEnabled()` check in `JwtAuthFilter`.
+- **Concurrency:** availability is checked and then inserted, so two requests for the last slot can both pass. The fix is a partial unique index on `(doctor_id, date, start_time)` over active appointments.
+- **No pagination** on the listing endpoints — fine at clinic scale, wrong at hospital scale.
+- **No rescheduling** — cancel and book again.
+- Test coverage is deep on appointments, thin on `AuthService` and `DoctorService`.
 
 ---
 
