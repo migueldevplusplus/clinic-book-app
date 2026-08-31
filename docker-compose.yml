@@ -22,6 +22,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/clinicbook
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      JPA_SHOW_SQL: "true"
 
 volumes:
   clinicbook_data:
