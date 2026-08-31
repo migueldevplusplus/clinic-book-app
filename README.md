@@ -163,7 +163,13 @@ docker compose up -d db
 ./mvnw spring-boot:run
 ```
 
-API on `http://localhost:8080`, PostgreSQL on `5433`. Flyway builds the schema and seeds a super admin on first boot.
+API on `http://localhost:8080`, PostgreSQL on `5433`. Flyway builds the schema on first boot.
+
+### The first administrator
+
+Every account is created by someone already signed in, which leaves the first administrator with nobody to create it. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` and `SuperAdminInitializer` creates that account at startup — but only while the database holds no administrator, so restarts are a no-op and a password changed later is never overwritten.
+
+Leave them unset and nothing is seeded, which is what the tests and a throwaway database want.
 
 ### Configuration
 
@@ -175,6 +181,10 @@ Committed values are development defaults; every one is overridden by an environ
 | `SPRING_DATASOURCE_USERNAME` / `_PASSWORD` | `postgres` / `postgres` |
 | `JWT_SECRET` | a labelled dev key — **replace it in any real deployment** |
 | `JWT_EXPIRATION` | `86400000` (24 h) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | empty — no administrator is seeded |
+| `ADMIN_FULL_NAME` | `Super Admin` |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` — comma-separated |
+| `JPA_SHOW_SQL` | `false` |
 
 ---
 
