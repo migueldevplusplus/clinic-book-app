@@ -17,7 +17,7 @@ public class Doctor {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
-    // Constructor: usado para CREAR un doctor nuevo.
+    // Creation path: enforces the invariants a new doctor must satisfy.
     public Doctor(UUID id, User user, Specialty specialty, int consultationDurationMinutes) {
         if (user == null || user.getRole() != UserRole.DOCTOR) {
             throw new IllegalArgumentException("Doctor must be associated with a user");
@@ -36,7 +36,7 @@ public class Doctor {
         this.updatedAt = this.createdAt;
     }
 
-    // Constructor privado: usado solo por reconstruct().
+    // Rehydration path, reached only through reconstruct().
     private Doctor(UUID id, User user, Specialty specialty, int consultationDurationMinutes,
                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -47,7 +47,9 @@ public class Doctor {
         this.updatedAt = updatedAt;
     }
 
-    // Factory para RECONSTRUIR un Doctor existente desde la BD (usado por el mapper).
+    // Rebuilds a doctor already stored in the database. The creation checks are
+    // skipped on purpose: the row satisfied them when it was written, and the
+    // mapper feeds it persisted values rather than user input.
     public static Doctor reconstruct(UUID id, User user, Specialty specialty, int consultationDurationMinutes,
                                      LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new Doctor(id, user, specialty, consultationDurationMinutes, createdAt, updatedAt);

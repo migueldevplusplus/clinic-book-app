@@ -29,7 +29,6 @@ public class AppointmentService {
     private final DoctorScheduleRepositoryPort doctorScheduleRepository;
     private final DoctorRepositoryPort doctorRepository;
 
-    // COMMANDS
 
     @Transactional
     public Appointment createAppointment(CreateAppointmentCommand command){
@@ -61,22 +60,18 @@ public class AppointmentService {
 
     public Appointment confirmAppointment(UUID appointmentId){
 
-        // FETCH + VALIDATE
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException("The appointment couldn't be found"));
 
 
 
-        // MUTATE
         appointment.confirm();
 
-        // SAVE
         return appointmentRepository.save(appointment);
 
     }
 
     public Appointment completeAsDoctor(UUID appointmentId, UUID requestingUserId){
-        // FETCH + VALIDATE
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException("The appointment couldn't be found"));
 
@@ -84,28 +79,22 @@ public class AppointmentService {
             throw new InvalidOwnerException("You don't own this resource");
         }
 
-        // MUTATE
         appointment.complete();
 
-        // SAVE
         return appointmentRepository.save(appointment);
     }
 
     public Appointment completeAsReceptionist(UUID appointmentId){
-        // FETCH + VALIDATE
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException("The appointment couldn't be found"));
 
-        // MUTATE
         appointment.complete();
 
-        // SAVE
         return appointmentRepository.save(appointment);
     }
 
 
     public Appointment cancelOwnAppointment(UUID appointmentId, UUID requestingPatientId){
-        // FETCH + VALIDATE
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException("The appointment couldn't be found"));
 
@@ -113,27 +102,21 @@ public class AppointmentService {
             throw new InvalidOwnerException("This appointment wasn't booked for you");
         }
 
-        // MUTATE
         appointment.cancel();
 
-        // SAVE
         return appointmentRepository.save(appointment);
     }
 
     public Appointment cancelAnyAppointment(UUID appointmentId){
-        // FETCH + VALIDATE
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException("The appointment couldn't be found"));
 
-        // MUTATE
         appointment.cancel();
 
-        // SAVE
         return appointmentRepository.save(appointment);
     }
 
 
-    // QUERYs
 
     
     public List<AppointmentsPatientResult> getPatientAppointments(UUID patientId){
@@ -163,7 +146,6 @@ public class AppointmentService {
 
         List<TimeSlot> timeSlots = new ArrayList<>();
 
-        // ALL SCHEDULES
         for(DoctorSchedule s : todayDoctorSchedules){
             LocalTime timeCounter = s.getStartTime();
             while(!timeCounter.plusMinutes(doctorConsultationDurationMinutes).isAfter(s.getEndTime())){
@@ -172,7 +154,6 @@ public class AppointmentService {
             }
         }
 
-        // MARK AS NOT AVAILABLE THE BUSY TIME SLOTS
         for(TimeSlot ts : timeSlots){
             for (Appointment appointment : todayAppointments){
                 if((appointment.overlapsWith(ts.getTime(), ts.getTime().plusMinutes(doctorConsultationDurationMinutes))

@@ -30,7 +30,6 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
 
-    // COMMAND
 
 
 
@@ -129,7 +128,6 @@ public class AppointmentController {
 
 
 
-    // QUERYs
 
 
     @PreAuthorize("hasRole('PATIENT')")

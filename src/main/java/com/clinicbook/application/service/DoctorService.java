@@ -28,7 +28,6 @@ public class DoctorService {
     private final AuthService authService;
 
 
-    // ---------------- DOCTOR METHODS ----------------
 
 
     @Transactional
@@ -58,19 +57,16 @@ public class DoctorService {
     }
 
     public List<Doctor> searchBySpecialty(Specialty specialty){
-        // FETCH
         return doctorRepository.findBySpecialty(specialty);
     }
 
     public Doctor getDoctorById(UUID id){
-        // FETCH
         return doctorRepository.findById(id)
                 .orElseThrow(() -> new DoctorNotFoundException(id));
     }
 
     
 
-    // ---------------- DOCTOR SCHEDULE METHODS ----------------
 
 
     @Transactional(readOnly = true)
@@ -86,7 +82,6 @@ public class DoctorService {
     @Transactional
     public DoctorSchedule createScheduleBlock(CreateScheduleCommand command){
 
-        // FETCH
         List<DoctorSchedule> existingBlocks =
                         doctorScheduleRepositoryPort.
                         findByDoctorIdAndDayOfWeek(command.doctorId(), command.dayOfWeek());
@@ -103,7 +98,6 @@ public class DoctorService {
         }
 
 
-        // PERSIST
         doctorScheduleRepositoryPort.save(newBlock);
 
         return newBlock;
@@ -111,17 +105,14 @@ public class DoctorService {
 
     public void deleteScheduleBlock(UUID scheduleId, UUID requestingDoctorId){
 
-        // FETCH
         DoctorSchedule schedule = doctorScheduleRepositoryPort
                 .findById(scheduleId)
-                .orElseThrow(() -> new ScheduleNotFoundException(scheduleId)); // VALIDATE
+                .orElseThrow(() -> new ScheduleNotFoundException(scheduleId));
 
-        // VALIDATE
         if(!requestingDoctorId.equals(schedule.getDoctorId())){
             throw new InvalidOwnerException("You don't own this resource in order to delete it");
         }
 
-        // PERSIST
         doctorScheduleRepositoryPort.delete(scheduleId);
     }
 

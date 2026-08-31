@@ -34,7 +34,7 @@ public class Patient {
         this.updatedAt = createdAt;
     }
 
-    // Constructor privado: usado solo por reconstruct().
+    // Rehydration path, reached only through reconstruct().
     private Patient(UUID id, User user, LocalDate birthDate, String phoneNumber,
                     LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -45,7 +45,9 @@ public class Patient {
         this.updatedAt = updatedAt;
     }
 
-    // Factory para RECONSTRUIR un Patient existente desde la BD (usado por el mapper).
+    // Rebuilds a patient already stored in the database. The creation checks are
+    // skipped on purpose: the row satisfied them when it was written, and the
+    // mapper feeds it persisted values rather than user input.
     public static Patient reconstruct(UUID id, User user, LocalDate birthDate, String phoneNumber,
                                       LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new Patient(id, user, birthDate, phoneNumber, createdAt, updatedAt);

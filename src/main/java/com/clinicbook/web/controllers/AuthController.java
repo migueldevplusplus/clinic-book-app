@@ -60,7 +60,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // AuthController — new endpoint
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @PostMapping("/receptionists")
     public ResponseEntity<ReceptionistResponse> registerReceptionist(@Valid @RequestBody RegisterRequest request) {

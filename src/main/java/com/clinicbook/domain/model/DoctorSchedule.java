@@ -18,7 +18,7 @@ public class DoctorSchedule {
     private final LocalTime endTime;
     private final LocalDateTime createdAt;
 
-    // Constructor: usado para CREAR un bloque de horario nuevo.
+    // Creation path: enforces the invariants a new block must satisfy.
     public DoctorSchedule(UUID id, UUID doctorId, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
         if (doctorId == null) {
             throw new IllegalArgumentException("Doctor ID is required");
@@ -65,8 +65,8 @@ public class DoctorSchedule {
     }
 
     public boolean coversTime(LocalTime time) {
+        // Half-open interval: the end time itself belongs to the next block.
         return !time.isBefore(startTime) && time.isBefore(endTime);
-        // Time doesn't occur before the schedule's start time, and it occurs before the schedule's end time
     }
 
     public boolean coversInterval(LocalTime start, LocalTime end){

@@ -43,7 +43,6 @@ public class DoctorController {
     }
 
 
-    // ------------------ DOCTOR ------------------
 
 
     // Register a new doctor by a Super Admin
@@ -94,7 +93,6 @@ public class DoctorController {
 
 
 
-    // ------------------ DOCTOR SCHEDULE ------------------
 
     @GetMapping("/{id}/schedules")
     public ResponseEntity<List<DoctorScheduleResponse>> getWeeklySchedule(@PathVariable UUID id){

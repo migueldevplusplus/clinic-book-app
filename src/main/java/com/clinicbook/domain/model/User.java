@@ -60,8 +60,9 @@ public class User {
         this.disabledAt = disabledAt;
     }
 
-    // Factory para RECONSTRUIR un User existente desde la BD (usado por el mapper).
-    // No revalida reglas de creación: confía en que el dato persistido ya era válido.
+    // Rebuilds a user already stored in the database. The creation checks are
+    // skipped on purpose: the row satisfied them when it was written, and the
+    // mapper feeds it persisted values rather than user input.
     public static User reconstruct(UUID id, String fullName, String email, String passwordHash, UserRole role,
                                    LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime disabledAt) {
         return new User(id, fullName, email, passwordHash, role, createdAt, updatedAt, disabledAt);
