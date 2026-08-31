@@ -14,6 +14,20 @@
 
 ---
 
+## Live Demo
+
+| | URL |
+|---|---|
+| API (Render) | <https://clinic-book-app.onrender.com/api> |
+| Swagger UI | <https://clinic-book-app.onrender.com/swagger-ui.html> |
+| Web client (Vercel) | <https://clinic-book-frontend.vercel.app> |
+
+The React client lives in [clinic-book-frontend](https://github.com/migueldevplusplus/clinic-book-frontend).
+
+Both run on free tiers that sleep when idle, so the first request after a quiet period takes up to two minutes while the service wakes.
+
+---
+
 ## Overview
 
 Backend for a private clinic's booking system. Patients browse a doctor's free slots and book them, doctors publish the hours they work and close their appointments, and the front desk confirms, cancels and books on behalf of walk-ins.
