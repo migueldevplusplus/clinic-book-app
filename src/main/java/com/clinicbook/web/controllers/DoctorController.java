@@ -123,7 +123,7 @@ public class DoctorController {
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'RECEPTIONIST')")
     @PostMapping("/{doctorId}/schedules")
-    public ResponseEntity<DoctorScheduleResponse> createScheduleForBlock(
+    public ResponseEntity<DoctorScheduleResponse> createScheduleBlockForDoctor(
             @PathVariable UUID doctorId, @Valid @RequestBody CreateScheduleRequest request
     ){
         CreateScheduleCommand command = new CreateScheduleCommand(
@@ -151,7 +151,7 @@ public class DoctorController {
     public ResponseEntity<Void> deleteScheduleBlockForDoctor(
             @PathVariable UUID id, @PathVariable UUID doctorId
     ){
-        doctorService.deleteScheduleBlockByStaff(id);
+        doctorService.deleteScheduleBlockByStaff(id, doctorId);
 
         return  ResponseEntity.noContent().build();
     }

@@ -87,6 +87,12 @@ public class DoctorService {
     @Transactional
     public DoctorSchedule createScheduleBlock(CreateScheduleCommand command){
 
+        // Staff name the doctor in the path, so an unknown id has to answer 404
+        // here instead of reaching the foreign key and surfacing as a 500.
+        if(!doctorRepository.existsById(command.doctorId())){
+            throw new DoctorNotFoundException(command.doctorId());
+        }
+
         List<DoctorSchedule> existingBlocks =
                         doctorScheduleRepositoryPort.
                         findByDoctorIdAndDayOfWeek(command.doctorId(), command.dayOfWeek());
@@ -121,11 +127,18 @@ public class DoctorService {
         doctorScheduleRepositoryPort.delete(scheduleId);
     }
 
-    public void deleteScheduleBlockByStaff(UUID scheduleId){
+    public void deleteScheduleBlockByStaff(UUID scheduleId, UUID doctorId){
 
         DoctorSchedule schedule = doctorScheduleRepositoryPort
                 .findById(scheduleId)
                 .orElseThrow(() -> new ScheduleNotFoundException(scheduleId));
+
+        // The route reads as this doctor's block, so it has to be one. Without
+        // the check any block could be deleted through any doctor's URL, and a
+        // stale page would silently remove someone else's hours.
+        if(!doctorId.equals(schedule.getDoctorId())){
+            throw new ScheduleNotFoundException(scheduleId);
+        }
 
         doctorScheduleRepositoryPort.delete(scheduleId);
     }
