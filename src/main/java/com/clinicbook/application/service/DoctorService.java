@@ -28,6 +28,7 @@ public class DoctorService {
     private final AuthService authService;
 
 
+    // ==================== DOCTOR ====================
 
 
     @Transactional
@@ -56,6 +57,10 @@ public class DoctorService {
         );
     }
 
+    public List<Doctor> getAllDoctors() {
+        return doctorRepository.findAll();
+    }
+
     public List<Doctor> searchBySpecialty(Specialty specialty){
         return doctorRepository.findBySpecialty(specialty);
     }
@@ -65,8 +70,8 @@ public class DoctorService {
                 .orElseThrow(() -> new DoctorNotFoundException(id));
     }
 
-    
 
+    // ==================== DOCTOR SCHEDULE ====================
 
 
     @Transactional(readOnly = true)
@@ -116,7 +121,12 @@ public class DoctorService {
         doctorScheduleRepositoryPort.delete(scheduleId);
     }
 
-    public List<Doctor> getAllDoctors() {
-        return doctorRepository.findAll();
+    public void deleteScheduleBlockByStaff(UUID scheduleId){
+
+        DoctorSchedule schedule = doctorScheduleRepositoryPort
+                .findById(scheduleId)
+                .orElseThrow(() -> new ScheduleNotFoundException(scheduleId));
+
+        doctorScheduleRepositoryPort.delete(scheduleId);
     }
 }

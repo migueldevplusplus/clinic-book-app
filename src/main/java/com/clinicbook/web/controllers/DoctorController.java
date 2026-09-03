@@ -29,6 +29,8 @@ import java.util.UUID;
 public class DoctorController {
     private final DoctorService doctorService;
 
+    // ==================== MAPPERS ====================
+
     public DoctorScheduleResponse toResponse(DoctorSchedule doctorSchedule){
 
         return new DoctorScheduleResponse(
@@ -43,6 +45,7 @@ public class DoctorController {
     }
 
 
+    // ==================== DOCTOR ====================
 
 
     // Register a new doctor by a Super Admin
@@ -91,12 +94,12 @@ public class DoctorController {
 
     }
 
+    // ==================== DOCTOR SCHEDULE ====================
 
 
-
-    @GetMapping("/{id}/schedules")
-    public ResponseEntity<List<DoctorScheduleResponse>> getWeeklySchedule(@PathVariable UUID id){
-        List<DoctorSchedule> doctorSchedules = doctorService.getWeeklySchedule(id);
+    @GetMapping("/{doctorId}/schedules")
+    public ResponseEntity<List<DoctorScheduleResponse>> getWeeklySchedule(@PathVariable UUID doctorId){
+        List<DoctorSchedule> doctorSchedules = doctorService.getWeeklySchedule(doctorId);
 
         List<DoctorScheduleResponse> doctorSchedulesResponse = doctorSchedules.stream().map(this::toResponse).toList();
 
@@ -118,12 +121,37 @@ public class DoctorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'RECEPTIONIST')")
+    @PostMapping("/{doctorId}/schedules")
+    public ResponseEntity<DoctorScheduleResponse> createScheduleForBlock(
+            @PathVariable UUID doctorId, @Valid @RequestBody CreateScheduleRequest request
+    ){
+        CreateScheduleCommand command = new CreateScheduleCommand(
+                doctorId, request.dayOfWeek(), request.startTime(), request.endTime());
+
+        DoctorSchedule schedule = doctorService.createScheduleBlock(command);
+
+        DoctorScheduleResponse response = this.toResponse(schedule);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PreAuthorize("hasRole('DOCTOR')")
-    @DeleteMapping("/{id}/schedules")
+    @DeleteMapping("/schedules/{id}")
     public ResponseEntity<Void> deleteScheduleBlock(
         @PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails userDetails
     ){
         doctorService.deleteScheduleBlock(id, userDetails.getId());
+
+        return  ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'RECEPTIONIST')")
+    @DeleteMapping("/{doctorId}/schedules/{id}")
+    public ResponseEntity<Void> deleteScheduleBlockForDoctor(
+            @PathVariable UUID id, @PathVariable UUID doctorId
+    ){
+        doctorService.deleteScheduleBlockByStaff(id);
 
         return  ResponseEntity.noContent().build();
     }
