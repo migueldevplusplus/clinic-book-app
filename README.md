@@ -149,7 +149,8 @@ erDiagram
 | Confirm an appointment | | | ✅ | |
 | Complete an appointment | | own only | ✅ | |
 | Cancel an appointment | own only | | ✅ | |
-| Publish / delete working hours | | own only | | |
+| Publish / delete own working hours | | ✅ | | |
+| Publish / delete any doctor's working hours | | | ✅ | ✅ |
 | Register and search patients | | | ✅ | ✅ |
 | Onboard doctors and receptionists | | | | ✅ |
 | List and disable accounts | | | | ✅ |
@@ -224,9 +225,9 @@ Open **`http://localhost:8080/swagger-ui.html`**, log in through `/api/auth/logi
 | Group | Endpoints |
 |---|---|
 | `/api/auth` | `POST /signup` · `POST /login` · `POST /receptionists` · `GET /users` · `PATCH /users/{id}/disable` |
-| `/api/doctors` | `POST /` · `GET /` · `GET /?specialty=` · `GET /{id}` · `GET /{id}/schedules` · `POST /schedules` · `DELETE /{id}/schedules` |
+| `/api/doctors` | `POST /` · `GET /` · `GET /?specialty=` · `GET /{id}` · `GET /{doctorId}/schedules` · `POST /schedules` *(own)* · `DELETE /schedules/{id}` *(own)* · `POST /{doctorId}/schedules` *(staff)* · `DELETE /{doctorId}/schedules/{id}` *(staff)* |
 | `/api/patients` | `POST /` · `GET /?query=` |
-| `/api/appointments` | `POST /` · `POST /receptionist` · `GET /{doctorId}?date=` *(availability)* · `GET /my` · `GET /agenda?date=` · `GET /upcoming-agenda` · `GET /all?date=` · `PATCH /{id}/confirm` · `PATCH /{id}/complete` · `PATCH /{id}/cancel` |
+| `/api/appointments` | `POST /` · `POST /receptionist` · `GET /{doctorId}?date=` *(availability)* · `GET /my` · `GET /agenda?date=` · `GET /upcoming-agenda` · `GET /{doctorId}/receptionist?date=` · `GET /all?date=` · `PATCH /{id}/confirm` · `PATCH /{id}/complete` · `PATCH /{id}/complete/receptionist` · `PATCH /{id}/cancel` · `PATCH /{id}/cancel/receptionist` |
 
 Every failure returns the same envelope:
 
@@ -273,6 +274,12 @@ Every failure returns the same envelope:
 - **No pagination** on the listing endpoints — fine at clinic scale, wrong at hospital scale.
 - **No rescheduling** — cancel and book again.
 - Test coverage is deep on appointments, thin on `AuthService` and `DoctorService`.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
 
 ---
 
