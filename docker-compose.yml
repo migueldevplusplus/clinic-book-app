@@ -10,6 +10,13 @@ services:
       - "5433:5432"
     volumes:
       - clinicbook_data:/var/lib/postgresql/data
+    # Postgres accepts connections a few seconds after the container starts, so
+    # the API has to wait for this probe instead of for the container itself.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clinicbook"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     build: .
@@ -17,7 +24,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/clinicbook
       SPRING_DATASOURCE_USERNAME: postgres
